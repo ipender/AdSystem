@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/androidTest/debug/layout/listitem_device.xml",
+        "source": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/bundles/debug/res/layout/listitem_device.xml"
+    },
+    {
+        "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/androidTest/debug/layout/dialog_camera.xml",
+        "source": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/bundles/debug/res/layout/dialog_camera.xml"
+    }
+]
