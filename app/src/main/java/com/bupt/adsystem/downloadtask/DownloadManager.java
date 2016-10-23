@@ -18,7 +18,7 @@ import java.util.concurrent.Semaphore;
 
 
 /**
- * Created by luoss on 2016/5/16.
+ * Created by pd on 2016/5/16.
  */
     public class DownloadManager {
     private String TAG = "DownloadManager";

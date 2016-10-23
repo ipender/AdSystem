@@ -6,7 +6,7 @@ import com.bupt.adsystem.entity.ThreadInfo;
 import java.util.List;
 
 /**
- * Created by luoss on 2016/5/14.
+ * Created by pd on 2016/5/14.
  */
 public interface ThreadDAO {
 

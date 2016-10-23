@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * 数据库操作
- * Created by luoss on 2016/5/14.
+ * Created by pd on 2016/5/14.
  */
 public class ThreadDAOImpl implements ThreadDAO {
     private DBHelper dbHelper;

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Created by luoss on 2016/5/14.
+ * Created by pd on 2016/5/14.
  */public class DownloadTask  {
 
 

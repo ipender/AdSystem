@@ -140,7 +140,8 @@ public class ServerRequest {
             url = new URL(mUsingServerUrl);
             mURLConnection = (HttpURLConnection) url.openConnection();
             mURLConnection.setConnectTimeout(3000);
-            mURLConnection.setRequestMethod("POST");
+            mURLConnection.setRequestMethod("GET");
+
 
             if (DEBUG) Log.d(TAG, "Send Request!");
             if (mURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {

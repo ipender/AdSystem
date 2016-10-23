@@ -99,9 +99,44 @@ public class MainActivity extends Activity {
             }
         });
 
-        mAdVideoCtrl = AdVideoCtrl.instance(mContext, mVideoView);
-        mAdImageCtrl = AdImageCtrl.instance(mContext, mImageSwitcher);
-        mServerRequest = new ServerRequest(this);
+        String xmlText = "<root resolution=\"1080*1920\" ver=\"0000000466\" templet=\"e4fcd3c6a7f84d91b82244bacdc4bcd8.zip\">\n" +
+                "<files>\n" +
+                "<media>\n" +
+                "<file id=\"7cc2f7f7-a190-40bb-8e1d-954b63eaffa4\" file=\"7f29e8764a504eeab2bea9d13e2c8a90.mp4\" md5=\"EBC7B612BB6C4B347262F1001D660DC9\" voice=\"50\" b_day=\"20160510\" e_day=\"20200510\" elipse=\"130\"/>\n" +
+                "<file id=\"b27cd857-6221-4243-bda3-3902012d4a3c\" file=\"87717128dc904e0cbb130c4f38e73a5a.mp4\" md5=\"E78CA01AA6144550614869DF78B4E825\" voice=\"50\" b_day=\"20160331\" e_day=\"20170331\" elipse=\"15\"/>\n" +
+                "<file id=\"9a77c414-ae92-4817-acde-66565b37502e\" file=\"7c299faba3df4bc9984a8d7f93e083dd.avi\" md5=\"8C8D216E6CA406CCA99EB43559B4E833\" voice=\"50\" b_day=\"20160331\" e_day=\"20170331\" elipse=\"45\"/>\n" +
+                "</media>\n" +
+                "<pic>\n" +
+                "<file id=\"d4963d63-7d62-432a-a3a4-df4bbf544010\" file=\"p1agkdeb931hhq1voo1jkf1aqqvh33.jpg\" md5=\"EE318B5E8DD566DFF30C0B67B3FF29B4\" b_day=\"20160418\" e_day=\"20200418\" elipse=\"10\"/>\n" +
+                "<file id=\"a8a2dd99-6bae-4448-bbe5-4aaab93f1e1c\" file=\"p1ahggqi141g5r6o7om4idei1d3.png\" md5=\"54F2C73ABF62C559DC6EFF25A42FE0B0\" b_day=\"20160429\" e_day=\"20200429\" elipse=\"15\"/>\n" +
+                "<file id=\"e031810f-acd5-4a7d-95b0-01bedb46328d\" file=\"p1ahggr8oe4ir1sa71pho19occ3p3.png\" md5=\"FF6833DE6EDDA0938269DC58890CE473\" b_day=\"20160429\" e_day=\"20200429\" elipse=\"15\"/>\n" +
+                "</pic>\n" +
+                "</files>\n" +
+                "<media_play id=\"1\">\n" +
+                "<p ID=\"f7ff4045-118e-4a7f-bdfc-78c8eb3d5f64\" begin=\"08:00:00\" end=\"20:00:00\" prime_time=\"0\">\n" +
+                "<media file=\"7cc2f7f7-a190-40bb-8e1d-954b63eaffa4\"/>\n" +
+                "<media file=\"b27cd857-6221-4243-bda3-3902012d4a3c\"/>\n" +
+                "<media file=\"9a77c414-ae92-4817-acde-66565b37502e\"/>\n" +
+                "</p>\n" +
+                "<p ID=\"f27cd208-8b49-499f-9a26-2a6f02012cc2\" begin=\"16:00:00\" end=\"18:00:00\" prime_time=\"1\">\n" +
+                "<media file=\"b27cd857-6221-4243-bda3-3902012d4a3c\"/>\n" +
+                "</p>\n" +
+                "</media_play>\n" +
+                "<pic_play id=\"2\">\n" +
+                "<p ID=\"8391eb26-05c0-4863-b7cc-c7ff71d112a9\" begin=\"08:00:00\" end=\"20:00:00\" prime_time=\"0\">\n" +
+                "<media file=\"d4963d63-7d62-432a-a3a4-df4bbf544010\"/>\n" +
+                "<media file=\"a8a2dd99-6bae-4448-bbe5-4aaab93f1e1c\"/>\n" +
+                "<media file=\"e031810f-acd5-4a7d-95b0-01bedb46328d\"/>\n" +
+                "</p>\n" +
+                "<p ID=\"a9032933-6642-40aa-b36b-6b6ae87f75c6\" begin=\"16:00:00\" end=\"18:00:00\" prime_time=\"1\">\n" +
+                "<media file=\"d4963d63-7d62-432a-a3a4-df4bbf544010\"/>\n" +
+                "</p>\n" +
+                "</pic_play>\n" +
+                "</root>";
+        
+//        mAdVideoCtrl = AdVideoCtrl.instance(mContext, mVideoView);
+//        mAdImageCtrl = AdImageCtrl.instance(mContext, mImageSwitcher);
+//        mServerRequest = new ServerRequest(this);
 //        mCameraApp = new CameraApp(this, mTextureView);
 //        AdImageCtrl.instance(this, mImageSwitcher);
 //        String url = "http://192.168.1.101:8080/download/purge_piece.mp4";

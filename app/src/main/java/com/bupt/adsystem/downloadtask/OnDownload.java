@@ -1,7 +1,7 @@
 package com.bupt.adsystem.downloadtask;
 
 /**
- * Created by luoss on 2016/5/16.
+ * Created by pd on 2016/5/16.
  * 下载回调接口
  */
 

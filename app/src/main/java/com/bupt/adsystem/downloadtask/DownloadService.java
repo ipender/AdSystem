@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 
 /**
  * 下载服务
- * Created by luoss on 2016/5/13.
+ * Created by pd on 2016/5/13.
  */
 public class DownloadService extends Service {
     private String TAG = "DownloadService";

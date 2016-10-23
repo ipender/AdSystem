@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * 数据库帮助类
- * Created by luoss on 2016/5/14.
+ * Created by pd on 2016/5/14.
  */
 public class DBHelper extends SQLiteOpenHelper {
     /**数据库名**/

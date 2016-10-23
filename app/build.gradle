@@ -30,4 +30,5 @@ dependencies {
     compile 'com.android.support:support-v4:23.0.1'
     compile project(':libuvccamera')
     compile project(':xutils')
+    compile files('libs/dom4j/dom4j-2.0.0-RC1.jar')
 }
