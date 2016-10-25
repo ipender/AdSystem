@@ -16,6 +16,16 @@ public class MessageContext {
     private String mIndexPath;
     private String mResponseString = null;
 
+    public String getScheduleId() {
+        return mScheduleId;
+    }
+
+    public void setScheduleId(String scheduleId) {
+        mScheduleId = scheduleId;
+    }
+
+    private String mScheduleId;
+
     public MessageContext(Context context, String responseString) {
         this.mContext = context;
         this.mResponseString = responseString;

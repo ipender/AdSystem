@@ -5,6 +5,7 @@ import android.content.Context;
 import android.hardware.usb.UsbManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.text.format.Time;
 import android.util.Log;
@@ -19,6 +20,8 @@ import android.widget.VideoView;
 
 import com.bupt.adsystem.Camera.CameraApp;
 import com.bupt.adsystem.R;
+import com.bupt.adsystem.RemoteServer.AdMediaInfo;
+import com.bupt.adsystem.RemoteServer.MiscUtil;
 import com.bupt.adsystem.RemoteServer.ServerRequest;
 import com.bupt.adsystem.Utils.AdImageCtrl;
 import com.bupt.adsystem.Utils.AdSystemConfig;
@@ -26,6 +29,9 @@ import com.bupt.adsystem.Utils.AdVideoCtrl;
 import com.bupt.adsystem.Utils.AlarmUtil;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 
@@ -89,16 +95,35 @@ public class MainActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Time time = new Time("GMT+8");
-                time.set(System.currentTimeMillis() + 10000);
-                String alarmTime = String.format("%02d:%02d:%02d", time.hour, time.minute, time.second);
-                Log.d(TAG, alarmTime);
-                AlarmUtil.setImageChangeTimeBroadcast(mContext, alarmTime, true);
-                AlarmUtil.setVideoChangeTimeBroadcast(mContext, alarmTime, true);
+//                Time time = new Time("GMT+8");
+//                time.set(System.currentTimeMillis() + 10000);
+//                String alarmTime = String.format("%02d:%02d:%02d", time.hour, time.minute, time.second);
+//                Log.d(TAG, alarmTime);
+//                AlarmUtil.setImageChangeTimeBroadcast(mContext, alarmTime, true);
+//                AlarmUtil.setVideoChangeTimeBroadcast(mContext, alarmTime, true);
+
+                String url = "http://117.158.178.198:8010/esmp-ly-o-websvr/ws/esmp?wsdl";
+                JSONObject jsonObject = new JSONObject();
+                Handler handler = new Handler();
+                try {
+                    jsonObject.put("deviceId", "10000000000000000001");
+                    Log.d(TAG, "Request Json Content: \n" +
+                            jsonObject.toString());
+
+//                    MiscUtil.postRequestTextFile(url, jsonObject.toString(), handler);
+                    MiscUtil.getRequestTextFile(url+"="+jsonObject.toString(), handler);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                String urlGet = MiscUtil.generateHttpGetUrl(0, 1, 80, 0, 0, 1, -89);
+                MiscUtil.getRequestTextFile(urlGet, handler);
+
                 if (DEBUG) Log.d(TAG, "Button Pressed!");
             }
         });
 
+        AdMediaInfo mediaInfo;
         String xmlText = "<root resolution=\"1080*1920\" ver=\"0000000466\" templet=\"e4fcd3c6a7f84d91b82244bacdc4bcd8.zip\">\n" +
                 "<files>\n" +
                 "<media>\n" +
@@ -133,7 +158,9 @@ public class MainActivity extends Activity {
                 "</p>\n" +
                 "</pic_play>\n" +
                 "</root>";
-        
+
+        mediaInfo = AdMediaInfo.parseXmlFromText(xmlText);
+        Log.d(TAG, mediaInfo.toString());
 //        mAdVideoCtrl = AdVideoCtrl.instance(mContext, mVideoView);
 //        mAdImageCtrl = AdImageCtrl.instance(mContext, mImageSwitcher);
 //        mServerRequest = new ServerRequest(this);

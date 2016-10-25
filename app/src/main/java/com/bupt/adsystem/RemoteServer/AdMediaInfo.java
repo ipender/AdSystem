@@ -18,10 +18,73 @@ public class AdMediaInfo {
     public HashMap<String, VideoAdInfo> videoContainer = new HashMap<>();
     public HashMap<String, ImageAdInfo> imageContainer = new HashMap<>();
     public HashMap<String, OneVideoInterval> videoIntervalContainer = new HashMap<>();
+
+    public HashMap<String, VideoAdInfo> getVideoContainer() {
+        return videoContainer;
+    }
+
+    public void setVideoContainer(HashMap<String, VideoAdInfo> videoContainer) {
+        this.videoContainer = videoContainer;
+    }
+
+    public HashMap<String, OneVideoInterval> getVideoIntervalContainer() {
+        return videoIntervalContainer;
+    }
+
+    public void setVideoIntervalContainer(HashMap<String, OneVideoInterval> videoIntervalContainer) {
+        this.videoIntervalContainer = videoIntervalContainer;
+    }
+
+    public HashMap<String, ImageAdInfo> getImageContainer() {
+        return imageContainer;
+    }
+
+    public void setImageContainer(HashMap<String, ImageAdInfo> imageContainer) {
+        this.imageContainer = imageContainer;
+    }
+
+    public HashMap<String, OneImageInterval> getImageIntervalContainer() {
+        return imageIntervalContainer;
+    }
+
+    public void setImageIntervalContainer(HashMap<String, OneImageInterval> imageIntervalContainer) {
+        this.imageIntervalContainer = imageIntervalContainer;
+    }
+
     public HashMap<String, OneImageInterval> imageIntervalContainer = new HashMap<>();
     public String resolution;
     public String ver;
     public String templet;
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Resolution: " + resolution + " Version: " + ver + " Templet: " + templet + "\n");
+        Set<String> videoSet = videoContainer.keySet();
+        sb.append("    VideoFile: " + videoSet.size() + " file total \n");
+        for (String key : videoSet) {
+            sb.append(videoContainer.get(key));
+        }
+
+        Set<String> imageSet = imageContainer.keySet();
+        sb.append("    ImageFile: " + imageSet.size() + " file total \n");
+        for (String key : imageSet) {
+            sb.append(imageContainer.get(key));
+        }
+
+        Set<String> videoIntervalSet = videoIntervalContainer.keySet();
+        sb.append("    VideoIntervals: " + videoIntervalSet.size() + " interval total \n");
+        for (String key : videoIntervalSet) {
+            sb.append(videoIntervalContainer.get(key));
+        }
+
+        Set<String> imageIntervalSet = imageIntervalContainer.keySet();
+        sb.append("    ImageIntervals: " + imageIntervalSet.size() + " interval total \n");
+        for (String key : imageIntervalSet) {
+            sb.append(imageIntervalContainer.get(key));
+        }
+        return sb.toString();
+    }
 
     public static HashSet<String> getHashMapKeyDifference(HashMap<String, Object> minuend, HashMap<String, Object> subtrahend) {
         HashSet<String> hashSet = new HashSet<>();
@@ -34,6 +97,18 @@ public class AdMediaInfo {
         }
 
         return hashSet;
+    }
+
+    public static Set<String> getSetDifference(final Set<String> minuend, final Set<String> subtrahend) {
+        HashSet<String> hashSet = new HashSet<>(subtrahend);
+        Set<String> set = new HashSet<>();
+
+        for (String key : minuend) {
+            if (!hashSet.contains(key)) {
+                set.add(key);
+            }
+        }
+        return set;
     }
 
     public class VideoAdInfo {
@@ -64,7 +139,7 @@ public class AdMediaInfo {
 
         @Override
         public String toString() {
-            return "Id: " + id + " File: " + filename + " Md5: " + md5 + "\n" +
+            return "ImageFile: " + "Id: " + id + " File: " + filename + " Md5: " + md5 + "\n" +
                     " BeginData: " + b_day + " EndData: " + e_day + " PlayDuration: " + elipse + "\n";
         }
     }
@@ -79,9 +154,9 @@ public class AdMediaInfo {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            sb.append("Id: " + id + " BeginTime:" + begin + " EndTime:" + end + "Prime:" + prime_time + "\n");
+            sb.append("VideoInterval: \n" + "Id: " + id + " BeginTime:" + begin + " EndTime:" + end + " Prime:" + prime_time + "\n");
             for (String fileId : fileContainer) {
-                sb.append("VideoFileId:" + fileId);
+                sb.append("VideoFileId:" + fileId + "\n");
             }
             return sb.toString();
         }
@@ -97,9 +172,9 @@ public class AdMediaInfo {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            sb.append("Id: " + id + " BeginTime:" + begin + " EndTime:" + end + "Prime:" + prime_time + "\n");
+            sb.append("ImageInterval: \n" + "Id: " + id + " BeginTime:" + begin + " EndTime:" + end + " Prime:" + prime_time + "\n");
             for (String fileId : fileContainer) {
-                sb.append("VideoFileId:" + fileId);
+                sb.append("VideoFileId:" + fileId + "\n");
             }
             return sb.toString();
         }
@@ -169,7 +244,7 @@ public class AdMediaInfo {
         }
 
         Element imageInterval = root.element(TAG_PIC_PLAY);
-        List<Element> imageIntervals = videoInterval.elements();
+        List<Element> imageIntervals = imageInterval.elements();
         for (Element interval : imageIntervals) {
             AdMediaInfo.OneImageInterval oneInterval = mediaInfo.new OneImageInterval();
             oneInterval.id = interval.attributeValue(INTERVAL_ID);

@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/AdSystem.iml" filepath="$PROJECT_DIR$/AdSystem.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/libuvccamera/libuvccamera.iml" filepath="$PROJECT_DIR$/libuvccamera/libuvccamera.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sensordriver/sensordriver.iml" filepath="$PROJECT_DIR$/sensordriver/sensordriver.iml" />
       <module fileurl="file://$PROJECT_DIR$/xutils/xutils.iml" filepath="$PROJECT_DIR$/xutils/xutils.iml" />
     </modules>
   </component>

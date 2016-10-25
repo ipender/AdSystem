@@ -1,1 +1,1 @@
-include ':app', ':libuvccamera', ':xutils'
+include ':app', ':libuvccamera', ':xutils', ':sensordriver'
