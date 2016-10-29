@@ -218,7 +218,7 @@ public class AdImageCtrl implements UpdateMedia {
     }
 
     @Override
-    public void updateWhenFileAdd() {
+    public void updateWhenStrategyChanged() {
         Cursor playListCursor;
         Cursor intervalCursor = mFileListMgr.getAllImageTimeInterval();
         final int rowNum = intervalCursor.getCount();

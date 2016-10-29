@@ -3,14 +3,12 @@ package com.bupt.adsystem.RemoteServer;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
+import com.bupt.adsystem.Utils.AdSystemConfig;
 import com.bupt.adsystem.Utils.UpdateMedia;
 import com.bupt.adsystem.downloadtask.DownloadManager;
 import com.bupt.adsystem.downloadtask.OnDownload;
-import com.serenegiant.usb.IFrameCallback;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.util.Set;
@@ -18,7 +16,10 @@ import java.util.Set;
 /**
  * Created by hadoop on 16-10-21.
  */
-public class MediaUpdateReciever implements MessageTargetReceiver {
+public class MediaUpdateReceiver implements MessageTargetReceiver {
+
+    private static final String TAG = "MediaUpdateReceiver";
+    private static final boolean DEBUG = AdSystemConfig.DEBUG;
 
     Context mContext;
     private DownloadManager mVideoDldMgr;
@@ -39,17 +40,19 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
     private Set<String> videoDownloadSet;
     private Set<String> videoDeleteSet;
     private Set<String> imageDownloadSet;
-    private Set<String> imageDelteSet;
+    private Set<String> imageDeleteSet;
     private VideoOnDownload mVideoOnDownload;
     private ImageOnDownload mImageOnDownload;
 
     private Handler mMediaStrategyUpdateHandler = new Handler() {
         @Override
         public void dispatchMessage(Message msg) {
-            if (msg.what == MiscUtil.QUEST_FILE_SUCCESS) {
+            if (msg.what == MiscUtil.QUEST_FileServer_SUCCESS) {
                 String xmlText = (String) msg.obj;
                 newMediaInfo = AdMediaInfo.parseXmlFromText(xmlText);
                 oldMediaInfo = mStrategyMgr.adMediaInfo;    // this line can't be deleted
+                process(oldMediaInfo, newMediaInfo);
+                mStrategyMgr.savaXmlMediaStrategy(xmlText);
             }
         }
     };
@@ -63,13 +66,15 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
         mVideoOnDownload = new VideoOnDownload();
         mImageOnDownload = new ImageOnDownload();
 
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("deviceId", "10000000000000000001");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        MiscUtil.postRequestTextFile(xmlStrategy + mScheduleId + ".xml", jsonObject.toString(), mMediaStrategyUpdateHandler);
+//        JSONObject jsonObject = new JSONObject();
+//        try {
+//            jsonObject.put("deviceId", "10000000000000000001");
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//        MiscUtil.postRequestTextFile(xmlStrategy + mScheduleId + ".xml", jsonObject.toString(), mMediaStrategyUpdateHandler);
+        MiscUtil.getRequestTextFile(xmlStrategy + mScheduleId + ".xml", mMediaStrategyUpdateHandler,
+                MiscUtil.QUEST_FileServer_SUCCESS);
         return null;
     }
 
@@ -82,7 +87,7 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
         Set<String> newImageKeySet = newMedia.imageContainer.keySet();
         Set<String> oldImageKeySet = oldMedia.imageContainer.keySet();
         imageDownloadSet = AdMediaInfo.getSetDifference(newImageKeySet, oldImageKeySet);
-        imageDelteSet = AdMediaInfo.getSetDifference(oldImageKeySet, newImageKeySet);
+        imageDeleteSet = AdMediaInfo.getSetDifference(oldImageKeySet, newImageKeySet);
         mTotalVideoTaskNum = videoDownloadSet.size();
         mTotalImageTaskNum = imageDownloadSet.size();
         mFinishedVideoNum = 0;
@@ -117,7 +122,7 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
 
         @Override
         public void onDownloading(String url, int finished) {
-
+            if (DEBUG) Log.d(TAG, "Downloading: " + url + " Finished: " + finished);
         }
 
         @Override
@@ -133,7 +138,7 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
 
         @Override
         public void onDownloading(String url, int finished) {
-
+            if (DEBUG) Log.d(TAG, "Downloading: " + url + " Finished: " + finished);
         }
 
         @Override
@@ -148,7 +153,7 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
     private void videoDownloadFinished(AdMediaInfo oldMedia, AdMediaInfo newMedia) {
         mStrategyMgr.changeVideoContainer(newMedia.getVideoContainer());
         UpdateMedia videoUpdate = mStrategyMgr.getVideoUpdateMedia();
-        if (videoUpdate != null) videoUpdate.updateWhenFileAdd();
+        if (videoUpdate != null) videoUpdate.updateWhenStrategyChanged();
         int deleteSize = videoDeleteSet.size();
         if (deleteSize > 0) {
             String mediaPath = mStrategyMgr.getMediaPath();
@@ -167,14 +172,14 @@ public class MediaUpdateReciever implements MessageTargetReceiver {
     private void imageDownloadFinished(AdMediaInfo oldMedia, AdMediaInfo newMedia) {
         mStrategyMgr.changeImageContainer(newMedia.getImageContainer());
         UpdateMedia imageUpdate = mStrategyMgr.getImageUpdateMedia();
-        if (imageUpdate != null) imageUpdate.updateWhenFileAdd();
-        int deleteSize = imageDelteSet.size();
+        if (imageUpdate != null) imageUpdate.updateWhenStrategyChanged();
+        int deleteSize = imageDeleteSet.size();
         if (deleteSize > 0) {
             String mediaPath = mStrategyMgr.getMediaPath();
             String filePath = null;
             File file = null;
-            for (String iamgeId : imageDelteSet) {
-                filePath = mediaPath + oldMedia.videoContainer.get(iamgeId).filename;
+            for (String imageId : imageDeleteSet) {
+                filePath = mediaPath + oldMedia.videoContainer.get(imageId).filename;
                 file = new File(filePath);
                 if (file.exists()) {
                     file.delete();

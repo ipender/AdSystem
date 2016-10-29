@@ -226,7 +226,7 @@ public class AdVideoCtrl implements UpdateMedia {
     }
 
     @Override
-    public void updateWhenFileAdd() {
+    public void updateWhenStrategyChanged() {
         String[] timeInterval = null;
 
         timeInterval = mFileListMgr.isCurrentTimeInVideoIntervel(Utils.getCurrentTime());

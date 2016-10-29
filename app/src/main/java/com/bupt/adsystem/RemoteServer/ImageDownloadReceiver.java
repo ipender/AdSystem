@@ -159,7 +159,7 @@ public class ImageDownloadReceiver implements MessageTargetReceiver {
 
                 // to update the play list
                 if (mImageCtrl != null) {
-                    mImageCtrl.updateWhenFileAdd();
+                    mImageCtrl.updateWhenStrategyChanged();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -184,7 +184,7 @@ public class ImageDownloadReceiver implements MessageTargetReceiver {
             mFileListMgr.insertImageFile(imageName, fullPath);
             mFinishedTaskNum++;
             if (mFinishedTaskNum >= mTotalTaskNum) {
-                mImageCtrl.updateWhenFileAdd();
+                mImageCtrl.updateWhenStrategyChanged();
                 mFinishedTaskNum = 0;
                 mTotalTaskNum = 0;
             }

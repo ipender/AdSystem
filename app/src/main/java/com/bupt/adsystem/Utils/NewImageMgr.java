@@ -120,7 +120,7 @@ public class NewImageMgr implements UpdateMedia{
     public String getImageByOrder() {
         int size;
         if ( (mImageList == null) || ((size = mImageList.size())) <= 0) return null;
-
+        mCurrentImageId++;
         if (mCurrentImageId >= size) mCurrentImageId = 0;
         return mImageList.get(mCurrentImageId);
     }
@@ -159,8 +159,9 @@ public class NewImageMgr implements UpdateMedia{
     }
 
     @Override
-    public void updateWhenFileAdd() {
+    public void updateWhenStrategyChanged() {
         mImageList = mStrategyMgr.getImageList();
+        mImageHandler.sendEmptyMessage(MSG_SWITCH_IMAGE);
     }
 
     @Override

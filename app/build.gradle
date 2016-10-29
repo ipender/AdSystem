@@ -31,4 +31,6 @@ dependencies {
     compile project(':libuvccamera')
     compile project(':xutils')
     compile files('libs/dom4j/dom4j-2.0.0-RC1.jar')
+    compile files('libs/ksoap2/ksoap2-android-assembly-3.6.0-jar-with-dependencies.jar')
+    compile project(':sensordriver')
 }

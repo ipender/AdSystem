@@ -22,10 +22,10 @@ public class FileDirMgr {
 
     private static final String TAG = "FileDirMgr";
     private static final boolean DEBUG = AdSystemConfig.DEBUG;
-    private static final String VIDEO_PATH = "/Ad_Video";
-    private static final String IMAGE_PATH = "/Ad_Image";
-    private static final String Camera_PATH = "/Camera";
-    private static final String DATABASE_PATH = "/Database";
+    private static final String VIDEO_PATH = "/Ad_Video/";
+    private static final String IMAGE_PATH = "/Ad_Image/";
+    private static final String Camera_PATH = "/Camera/";
+    private static final String DATABASE_PATH = "/Database/";
 
     private static final String PATTERN = "([^\\.]*)\\.([^\\.]*)";
     public static final String[] VIDEO_EXTENSION = {"mp4", "avi", "rmvb", "mkv", "mpeg"};
@@ -64,7 +64,7 @@ public class FileDirMgr {
                 file.mkdir();
             }
         }
-        mVideoStoragePath = mInternalStoragePath + VIDEO_PATH;
+        mVideoStoragePath = mExternalStoragePath + VIDEO_PATH;
 //        mImageStoragePath = mInternalStoragePath + IMAGE_PATH;
 //        mDatabasePath = mInternalStoragePath + DATABASE_PATH;
 
@@ -94,7 +94,7 @@ public class FileDirMgr {
     }
 
     public String getVideoStoragePath() {
-        return mVideoStoragePath;
+        return mVideoStoragePath + "/";
     }
 
     public String getCameraStoragePath() {

@@ -10,7 +10,7 @@ public interface UpdateMedia {
     void updateWhenAlarmUp(boolean isTimeStart);
     void updateWhenIntervalAddOrEdit(@NonNull String startTime, @NonNull String endTime);
     void updateWhenIntervalDelete(@NonNull String startTime, @NonNull String endTime);
-    void updateWhenFileAdd();
+    void updateWhenStrategyChanged();
     void updateWhenFileDelete();
     void updateWhenDownloadFinished();
 }

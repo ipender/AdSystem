@@ -166,7 +166,7 @@ public class VideoDownloadReceiver implements MessageTargetReceiver {
 
                 // to update the play list
                 if (mAdVideoCtrl != null) {
-                    mAdVideoCtrl.updateWhenFileAdd();
+                    mAdVideoCtrl.updateWhenStrategyChanged();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -203,7 +203,7 @@ public class VideoDownloadReceiver implements MessageTargetReceiver {
             mFinishedTaskNum++;
             if (mFinishedTaskNum == mDownloadTaskNum) {
                 if (mAdVideoCtrl != null) {
-                    mAdVideoCtrl.updateWhenFileAdd();
+                    mAdVideoCtrl.updateWhenStrategyChanged();
                 }
                 mFinishedTaskNum = 0;
                 mDownloadTaskNum = 0;

@@ -8,4 +8,5 @@ LOCAL_SRC_FILES := com_bupt_sensordriver_led.c \
                    com_bupt_sensordriver_rfid.c
 LOCAL_LDLIBS += -llog
 LOCAL_LDLIBS +=-lm
+LOCAL_JNI_SHARED_LIBRARIES := libtest
 include $(BUILD_SHARED_LIBRARY)

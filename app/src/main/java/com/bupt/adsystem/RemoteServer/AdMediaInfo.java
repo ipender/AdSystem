@@ -86,12 +86,13 @@ public class AdMediaInfo {
         return sb.toString();
     }
 
-    public static HashSet<String> getHashMapKeyDifference(HashMap<String, Object> minuend, HashMap<String, Object> subtrahend) {
+    public static HashSet<String> getHashMapKeyDifference(HashMap<String, ? extends Object> minuend,
+                                                          HashMap<String, ? extends Object> subtrahend) {
         HashSet<String> hashSet = new HashSet<>();
         Set<String> keySet = minuend.keySet();
 
         for (String key : keySet) {
-            if (!subtrahend.containsKey(key)){
+            if (!subtrahend.containsKey(key)) {
                 hashSet.add(key);
             }
         }

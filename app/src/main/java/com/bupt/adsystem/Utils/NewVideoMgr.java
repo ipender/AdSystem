@@ -62,9 +62,8 @@ public class NewVideoMgr implements UpdateMedia{
         public void handleMessage(Message msg) {
             if (msg.what == MSG_PLAY_VIDEO && mVideoView != null) {
                 mVideoAdPath = getVideoByOrder();
-
                 if (mVideoAdPath == null) return;
-
+                if (DEBUG) Log.d(TAG, "Is Playing: " +  mVideoAdPath);
                 mVideoView.setVideoPath(mVideoAdPath);
                 mVideoView.setVisibility(View.VISIBLE);
                 mVideoView.start();
@@ -76,6 +75,7 @@ public class NewVideoMgr implements UpdateMedia{
         if (mVideoList == null ) return null;
         int size = mVideoList.size();
         if (size <= 0) return null;
+        mPosition ++;
         if (mPosition >= size) mPosition = 0;
         return mVideoList.get(mPosition);
     }
@@ -154,8 +154,9 @@ public class NewVideoMgr implements UpdateMedia{
     }
 
     @Override
-    public void updateWhenFileAdd() {
+    public void updateWhenStrategyChanged() {
         mVideoList = mStrategyMgr.getVideoList();
+        mVideoHandler.sendEmptyMessage(MSG_PLAY_VIDEO);
     }
 
     @Override

@@ -6,8 +6,12 @@ import android.util.Log;
 
 import com.bupt.adsystem.Utils.AdSystemConfig;
 
-import org.dom4j.Document;
-import org.dom4j.Element;
+import org.ksoap2.SoapEnvelope;
+import org.ksoap2.serialization.PropertyInfo;
+import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapSerializationEnvelope;
+import org.ksoap2.transport.HttpTransportSE;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,7 +23,6 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 /**
  * Created by hadoop on 16-10-21.
@@ -29,9 +32,13 @@ public class MiscUtil {
     private static final String TAG = "MiscUtil";
     private static final boolean DEBUG = AdSystemConfig.DEBUG;
 
-    public static final int QUEST_FILE_SUCCESS = 1;
+    public static final String NameSpace = "http://cxf.esmp.inshn.com/";
+
+    public static final int QUEST_SUCCESS = 1;
     public static final int MALFORMED_URL = 2;
     public static final int IO_EXCEPTION = 3;
+    public static final int QUEST_FileServer_SUCCESS = 4;
+    public static final int QUEST_Monitor_SUCCESS = 5;
 
     public static void postRequestTextFile(final String serverUrl, final String content, final Handler handler) {
         new Thread(new Runnable() {
@@ -59,7 +66,7 @@ public class MiscUtil {
                         String text = read(inputStream).toString();
                         if (DEBUG) Log.d(TAG, text);
                         Message message = new Message();
-                        message.what = QUEST_FILE_SUCCESS;
+                        message.what = QUEST_SUCCESS;
                         message.obj = text;
                         handler.sendMessage(message);
                     } else {
@@ -82,10 +89,15 @@ public class MiscUtil {
     }
 
     public static void getRequestTextFile(final String serverUrl, final Handler handler) {
+        getRequestTextFile(serverUrl, handler, QUEST_SUCCESS);
+    }
+
+    public static void getRequestTextFile(final String serverUrl, final Handler handler, final int handlerCode) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    if (DEBUG) Log.d(TAG, "Server Url: " + serverUrl);
                     URL url = new URL(serverUrl);
                     HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                     httpURLConnection.setConnectTimeout(3000);
@@ -97,7 +109,7 @@ public class MiscUtil {
                         String text = read(inputStream).toString();
                         if (DEBUG) Log.d(TAG, text);
                         Message message = new Message();
-                        message.what = QUEST_FILE_SUCCESS;
+                        message.what = handlerCode;
                         message.obj = text;
                         handler.sendMessage(message);
                     } else {
@@ -143,6 +155,51 @@ public class MiscUtil {
         sb.append("&CFloor="+CFloor);
         sb.append("&CSignal="+CSignal);
         return baseUrl + sb.toString();
+    }
+
+    public static void requestJsonFromWebservice(final String wsdl, final String serverMethodName,
+                                                 final String jsonStr, final Handler handler) {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final HttpTransportSE httpSE = new HttpTransportSE(wsdl);
+                SoapObject soapObject = new SoapObject(NameSpace, serverMethodName);
+//                soapObject.addProperty("jsonStr", jsonStr);
+                PropertyInfo propertyInfo = new PropertyInfo();
+                propertyInfo.setName("jsonStr");
+                propertyInfo.setValue(jsonStr);
+                soapObject.addProperty(propertyInfo);
+                // the SoapEnvelope Version should be consistent with the Server,
+                // or it could happens XmlPullParserException
+                final SoapSerializationEnvelope soapEnvelope = new
+                        SoapSerializationEnvelope(SoapEnvelope.VER11);
+                soapEnvelope.dotNet = false;
+                soapEnvelope.bodyOut = soapObject;
+                soapEnvelope.setOutputSoapObject(soapObject);
+                try {
+                    httpSE.call(wsdl + serverMethodName, soapEnvelope);
+                    if (soapEnvelope.getResponse() != null) {
+                        String result = soapEnvelope.getResponse().toString();
+                        if (DEBUG) Log.d(TAG, "WebService response:\n" +
+                                result);
+                        if (handler == null) return;
+                        Message message = new Message();
+                        message.what = QUEST_FileServer_SUCCESS;
+                        message.obj = result;
+                        handler.sendMessage(message);
+                    } else {
+                        if (DEBUG) Log.d(TAG, "WebService request failed!");
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (XmlPullParserException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
     }
 
 }

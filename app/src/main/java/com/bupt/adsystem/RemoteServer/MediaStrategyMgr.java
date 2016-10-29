@@ -75,6 +75,8 @@ public class MediaStrategyMgr {
         mMediaPath = FileDirMgr.instance().getVideoStoragePath();
         if (xmlText != null) {
             adMediaInfo = AdMediaInfo.parseXmlFromText(xmlText);
+        } else {
+            adMediaInfo = new AdMediaInfo();
         }
     }
 
@@ -83,7 +85,7 @@ public class MediaStrategyMgr {
         List<String> videoList = new ArrayList<>();
         Set<String> keySets = adMediaInfo.videoContainer.keySet();
         for (String key : keySets) {
-            String videoPath = mMediaPath + adMediaInfo.videoContainer.get(key);
+            String videoPath = mMediaPath + adMediaInfo.videoContainer.get(key).filename;
             videoList.add(videoPath);
         }
         return videoList;
@@ -94,7 +96,7 @@ public class MediaStrategyMgr {
         List<String> imageList = new ArrayList<>();
         Set<String> keySets = adMediaInfo.imageContainer.keySet();
         for (String key : keySets) {
-            String imagePath = mMediaPath + adMediaInfo.imageContainer.get(key);
+            String imagePath = mMediaPath + adMediaInfo.imageContainer.get(key).filename;
             imageList.add(imagePath);
         }
         return imageList;
