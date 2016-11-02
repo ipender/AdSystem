@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.bupt.adsystem.Utils.AdSystemConfig;
 import com.bupt.adsystem.view.MainActivity;
@@ -46,6 +47,14 @@ public class ServerRequest {
 
     final rfid mRfid = rfid.instance();
     final sensor mSensor = sensor.instance();
+    private int[] mSensorData;
+    /* this is for test */
+    private TextView mFloorView;
+
+    public void setFloorTextView(TextView textView) {
+        mFloorView = textView;
+    }
+    /* this is for test */
 
     public ServerRequest(Context context, Handler mainHandler) {
         this.mContext = context;
@@ -79,21 +88,28 @@ public class ServerRequest {
             @Override
             public void run() {
                 MiscUtil.requestJsonFromWebservice(mWebServerUrl, MethodName, jsonStr, mWebRequestHandler);
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, 0, 10000);
+        Timer time2 = new Timer();
+        TimerTask timerTask2 = new TimerTask() {
+            @Override
+            public void run() {
                 long rfidId = mRfid.getRfidId(true);
-                int[] sensor = mSensor.getSensorData();
-                String urlGet = MiscUtil.generateHttpGetUrl(sensor[4], sensor[1], 80, sensor[2], sensor[3], sensor[0], -89);
+                int[] mSensorData = mSensor.getSensorData();
+                String urlGet = MiscUtil.generateHttpGetUrl(mSensorData[4], mSensorData[1], 80,
+                        mSensorData[2], mSensorData[3], mSensorData[0], -89);
                 MiscUtil.getRequestTextFile(urlGet, mWebRequestHandler);
-
                 String display = String.format("Floor: %02d MoveDir: %02d DoorStatus: %02d " +
-                        "hasPerson: %02d Warning: %02d RFID: %08x",
-                        sensor[0], sensor[1], sensor[2], sensor[3], sensor[4], rfidId);
+                                "hasPerson: %02d Warning: %02d RFID: %08x",
+                        mSensorData[0], mSensorData[1], mSensorData[2], mSensorData[3], mSensorData[4], rfidId);
                 Message message = new Message();
                 message.what = MainActivity.Elevator_Info;
                 message.obj = display;
                 mMainHandler.sendMessage(message);
             }
         };
-        timer.scheduleAtFixedRate(timerTask, 0, 10000);
+        time2.scheduleAtFixedRate(timerTask2, 0, 3000);
 
 //        new Thread(new Runnable() {
 //            @Override
@@ -146,6 +162,7 @@ public class ServerRequest {
                     JSONObject subJson = rootJson.getJSONObject("data");
                     String scheduleId = subJson.getString("scheduleId");
                     if ( (mStrategyMgr.adMediaInfo.resolution == null) || (!scheduleId.equals(mStrategyMgr.adMediaInfo.resolution))) {
+                        mStrategyMgr.adMediaInfo.resolution = scheduleId;
                         MessageTargetReceiver receiver = new MediaUpdateReceiver();
                         MessageContext message = new MessageContext(mContext, "{\"OK\":\"OK\"}");
                         message.setScheduleId(scheduleId);
@@ -155,7 +172,10 @@ public class ServerRequest {
                     e.printStackTrace();
                 }
             } else if (msg.what == MiscUtil.QUEST_SUCCESS) {
-
+                /* this is for test */
+                if (mFloorView == null) {
+                    mFloorView.setText(mSensorData[0] + "楼");
+                }
             }
         }
     };

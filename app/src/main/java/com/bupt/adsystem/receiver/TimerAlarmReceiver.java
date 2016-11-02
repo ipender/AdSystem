@@ -4,14 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.bupt.adsystem.Utils.AdImageCtrl;
 import com.bupt.adsystem.Utils.AdSystemConfig;
 import com.bupt.adsystem.Utils.AdVideoCtrl;
-import com.bupt.adsystem.Utils.AlarmUtil;
-
-import java.util.Queue;
+import com.bupt.adsystem.RemoteServer.AlarmUtil;
 
 /**
  * Created by hadoop on 16-8-21.

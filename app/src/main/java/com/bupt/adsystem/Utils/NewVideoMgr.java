@@ -10,9 +10,9 @@ import android.view.View;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.bupt.adsystem.RemoteServer.AdMediaInfo;
 import com.bupt.adsystem.RemoteServer.MediaStrategyMgr;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -63,6 +63,12 @@ public class NewVideoMgr implements UpdateMedia{
             if (msg.what == MSG_PLAY_VIDEO && mVideoView != null) {
                 mVideoAdPath = getVideoByOrder();
                 if (mVideoAdPath == null) return;
+                File video = new File(mVideoAdPath);
+                if (!video.exists()) {
+                    if (DEBUG) Log.e(TAG, "This Video Should Exists! : " + mVideoAdPath);
+                    mVideoHandler.sendEmptyMessageDelayed(MSG_PLAY_VIDEO, 5000);
+                    return;
+                }
                 if (DEBUG) Log.d(TAG, "Is Playing: " +  mVideoAdPath);
                 mVideoView.setVideoPath(mVideoAdPath);
                 mVideoView.setVisibility(View.VISIBLE);
@@ -89,7 +95,7 @@ public class NewVideoMgr implements UpdateMedia{
         mVideoView.setVisibility(View.VISIBLE);
         mStrategyMgr = MediaStrategyMgr.instance(context);
         mStrategyMgr.setVideoUpdateMedia(this);
-        mVideoList = mStrategyMgr.getVideoList();
+        mVideoList = mStrategyMgr.getVideoListWithIntervalCheck();
         mVideoHandler.sendEmptyMessage(MSG_PLAY_VIDEO);
     }
 

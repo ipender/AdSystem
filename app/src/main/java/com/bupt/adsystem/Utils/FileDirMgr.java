@@ -94,7 +94,7 @@ public class FileDirMgr {
     }
 
     public String getVideoStoragePath() {
-        return mVideoStoragePath + "/";
+        return mVideoStoragePath;
     }
 
     public String getCameraStoragePath() {

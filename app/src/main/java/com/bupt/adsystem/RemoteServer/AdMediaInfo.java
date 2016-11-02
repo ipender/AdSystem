@@ -130,7 +130,7 @@ public class AdMediaInfo {
         }
     }
 
-    class ImageAdInfo {
+    public class ImageAdInfo {
         String id;
         String filename;
         String md5;
@@ -145,7 +145,7 @@ public class AdMediaInfo {
         }
     }
 
-    class OneVideoInterval {
+    public class OneVideoInterval {
         String id;
         String begin;
         String end;

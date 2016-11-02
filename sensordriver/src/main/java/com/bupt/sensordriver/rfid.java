@@ -19,13 +19,16 @@ public class rfid {
     }
 
     public long getRfidId(boolean isBigEndian) {
-        int[] bytes = Read();
+        byte[] bytes = ReadCardNum();
+
         if (bytes == null) return 0;
         long id;
         if (isBigEndian) {
-            id = (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
+            id = (bytes[0] & 0xff << 24) + (bytes[1] & 0xff << 16) +
+                    (bytes[2] & 0xff << 8) + bytes[3] & 0xff;
         } else {
-            id = (bytes[3] << 24) + (bytes[2] << 16) + (bytes[1] << 8) + bytes[0];
+            id = (bytes[3] & 0xff << 24) + (bytes[2] & 0xff << 16) +
+                    (bytes[1] & 0xff << 8) + bytes[0] & 0xff;
         }
         return id;
     }
@@ -36,8 +39,8 @@ public class rfid {
 
     public native int Ioctl(int num, int en);
 
-    // 4 int number are used as 4 byte number, represent the id card number of 4 byte
     public native int[] Read();
 
+    // represent the id card number of 4 byte
     public native byte[] ReadCardNum();
 }

@@ -26,7 +26,7 @@ public class TelephoneStateReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         mTelMgr = (TelephonyManager) context.getSystemService(Service.TELEPHONY_SERVICE);
         if (DEBUG) Log.d(TAG, intent.getAction());
-        endCall();
+//        endCall();
 
 //        abortBroadcast();
     }

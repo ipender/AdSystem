@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.telephony.TelephonyManager;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
@@ -22,20 +21,15 @@ import android.widget.VideoView;
 import com.android.internal.telephony.ITelephony;
 import com.bupt.adsystem.Camera.CameraApp;
 import com.bupt.adsystem.R;
-import com.bupt.adsystem.RemoteServer.AdMediaInfo;
-import com.bupt.adsystem.RemoteServer.MiscUtil;
 import com.bupt.adsystem.RemoteServer.ServerRequest;
 import com.bupt.adsystem.Utils.AdImageCtrl;
 import com.bupt.adsystem.Utils.AdSystemConfig;
 import com.bupt.adsystem.Utils.AdVideoCtrl;
-import com.bupt.adsystem.Utils.AlarmUtil;
 import com.bupt.adsystem.Utils.NewImageMgr;
 import com.bupt.adsystem.Utils.NewVideoMgr;
+import com.bupt.adsystem.downloadtask.DownloadManager;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.lang.reflect.Method;
 
@@ -72,7 +66,6 @@ public class MainActivity extends Activity {
     private ServerRequest mServerRequest;
     private AdImageCtrl mAdImageCtrl;
     private AdVideoCtrl mAdVideoCtrl;
-    TelephonyManager mTelMgr;
 
     public static final int Elevator_Info = 1;
 
@@ -89,7 +82,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        requestWindowFeature(Window.FEATURE_NO_TITLE );
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN
                 | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                             WindowManager.LayoutParams.FLAG_FULLSCREEN
@@ -108,7 +101,8 @@ public class MainActivity extends Activity {
         mTextureView.setVisibility(View.VISIBLE);
         mVideoView.setVisibility(View.INVISIBLE);
         mVideoView.setZOrderOnTop(true);
-        textView.setText("Just for seeing!");
+
+        DownloadManager.instance(getApplicationContext());
 
 
         button.setOnClickListener(new View.OnClickListener() {
@@ -144,7 +138,7 @@ public class MainActivity extends Activity {
                     Method getITelephonyMethod = c.getDeclaredMethod("getITelephony", (Class[]) null);
                     getITelephonyMethod.setAccessible(true);
                     ITelephony iTelephony = null;
-                    iTelephony = (ITelephony) getITelephonyMethod.invoke(mTelMgr, (Object[]) null);
+                    iTelephony = (ITelephony) getITelephonyMethod.invoke(mTelephonyManager, (Object[]) null);
 //                   iTelephony.endCall();
 //                    iTelephony.answerRingingCall();
 
@@ -161,6 +155,7 @@ public class MainActivity extends Activity {
         NewImageMgr.instance(mContext, mImageSwitcher);
         NewVideoMgr.instance(mContext, mVideoView);
         ServerRequest request = new ServerRequest(mContext, mMainHandler);
+        request.setFloorTextView(textView);
 
 //        mAdVideoCtrl = AdVideoCtrl.instance(mContext, mVideoView);
 //        mAdImageCtrl = AdImageCtrl.instance(mContext, mImageSwitcher);

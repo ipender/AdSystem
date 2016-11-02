@@ -11,6 +11,7 @@ import com.bupt.adsystem.downloadtask.DownloadManager;
 import com.bupt.adsystem.downloadtask.OnDownload;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Set;
 
 /**
@@ -43,16 +44,17 @@ public class MediaUpdateReceiver implements MessageTargetReceiver {
     private Set<String> imageDeleteSet;
     private VideoOnDownload mVideoOnDownload;
     private ImageOnDownload mImageOnDownload;
+    private String mXmlText = null;
 
     private Handler mMediaStrategyUpdateHandler = new Handler() {
         @Override
         public void dispatchMessage(Message msg) {
             if (msg.what == MiscUtil.QUEST_FileServer_SUCCESS) {
-                String xmlText = (String) msg.obj;
-                newMediaInfo = AdMediaInfo.parseXmlFromText(xmlText);
+                mXmlText = (String) msg.obj;
+                newMediaInfo = AdMediaInfo.parseXmlFromText(mXmlText);
                 oldMediaInfo = mStrategyMgr.adMediaInfo;    // this line can't be deleted
                 process(oldMediaInfo, newMediaInfo);
-                mStrategyMgr.savaXmlMediaStrategy(xmlText);
+                mStrategyMgr.savaXmlMediaStrategy(mXmlText);
             }
         }
     };
@@ -151,6 +153,7 @@ public class MediaUpdateReceiver implements MessageTargetReceiver {
     }
 
     private void videoDownloadFinished(AdMediaInfo oldMedia, AdMediaInfo newMedia) {
+        HashMap<String, AdMediaInfo.VideoAdInfo> videoContainer = oldMedia.videoContainer;
         mStrategyMgr.changeVideoContainer(newMedia.getVideoContainer());
         UpdateMedia videoUpdate = mStrategyMgr.getVideoUpdateMedia();
         if (videoUpdate != null) videoUpdate.updateWhenStrategyChanged();
@@ -159,8 +162,9 @@ public class MediaUpdateReceiver implements MessageTargetReceiver {
             String mediaPath = mStrategyMgr.getMediaPath();
             String filePath = null;
             File file = null;
+            if (videoContainer == null) return;
             for (String videoId : videoDeleteSet) {
-                filePath = mediaPath + oldMedia.videoContainer.get(videoId).filename;
+                filePath = mediaPath + videoContainer.get(videoId).filename;
                 file = new File(filePath);
                 if (file.exists()) {
                     file.delete();
@@ -170,6 +174,7 @@ public class MediaUpdateReceiver implements MessageTargetReceiver {
     }
 
     private void imageDownloadFinished(AdMediaInfo oldMedia, AdMediaInfo newMedia) {
+        HashMap<String, AdMediaInfo.ImageAdInfo> imageContainer = oldMedia.imageContainer;
         mStrategyMgr.changeImageContainer(newMedia.getImageContainer());
         UpdateMedia imageUpdate = mStrategyMgr.getImageUpdateMedia();
         if (imageUpdate != null) imageUpdate.updateWhenStrategyChanged();
@@ -178,8 +183,10 @@ public class MediaUpdateReceiver implements MessageTargetReceiver {
             String mediaPath = mStrategyMgr.getMediaPath();
             String filePath = null;
             File file = null;
+            if (imageContainer == null) return;
             for (String imageId : imageDeleteSet) {
-                filePath = mediaPath + oldMedia.videoContainer.get(imageId).filename;
+                if (DEBUG) Log.d(TAG, "ImageId: " + imageId);
+                filePath = mediaPath + imageContainer.get(imageId).filename;
                 file = new File(filePath);
                 if (file.exists()) {
                     file.delete();

@@ -7,7 +7,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.preference.PreferenceManager;
 
 import com.bupt.adsystem.Utils.AdSystemConfig;
-import com.bupt.adsystem.Utils.AlarmUtil;
+import com.bupt.adsystem.RemoteServer.AlarmUtil;
 
 /**
  * Created by wyouflf on 15/10/28.
@@ -32,7 +32,7 @@ public class MyApplication extends Application {
 
         Settings.Voice.OnTime = appSettings.getString(Settings.Voice.KEY_ON_TIME, "07:00:00");
         Settings.Voice.OffTime = appSettings.getString(Settings.Voice.KEY_OFF_TIME, "21:00:00");
-        Settings.Voice.Volume = appSettings.getInt(Settings.Voice.KEY_Volume, 50);
+        Settings.Voice.Volume = appSettings.getInt(Settings.Voice.KEY_Volume, 10);
 
         Settings.Device.Id = appSettings.getString(Settings.Device.KEY_ID, "12345");
         Settings.Device.RunMode = appSettings.getString(Settings.Device.KEY_RunMode, "install");

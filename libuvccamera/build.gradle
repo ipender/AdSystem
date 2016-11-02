@@ -41,5 +41,5 @@ task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
 	} else {
 		ndkBuildPath = ndkBuildingDir + '/ndk-build'
 	}
-	commandLine ndkBuildPath, '-j8', '-C', file('src/main').absolutePath
+	commandLine ndkBuildPath, '-j8', '-C', file('src/main/jni').absolutePath
 }

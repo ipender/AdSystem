@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 
 import com.bupt.adsystem.Utils.FileDirMgr;
 import com.bupt.adsystem.Utils.UpdateMedia;
+import com.bupt.adsystem.Utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,6 +81,28 @@ public class MediaStrategyMgr {
         }
     }
 
+    public List<String> getVideoListWithIntervalCheck() {
+        String curTime = Utils.getCurrentTime();
+        HashMap<String, AdMediaInfo.OneVideoInterval> alias = adMediaInfo.videoIntervalContainer;
+        HashMap<String, AdMediaInfo.VideoAdInfo> videoContainer =  adMediaInfo.videoContainer;
+        if (alias == null ||
+                alias.size() <= 0) return getVideoList();
+        Set<String> intervalIds = alias.keySet();
+        for (String intervalId : intervalIds) {
+            AdMediaInfo.OneVideoInterval one = alias.get(intervalId);
+            if (Utils.isTimeInInterval(curTime, one.begin, one.end)) {
+                List<String> videoList = new ArrayList<>();
+                String videoPath = null;
+                for (String fileId : one.fileContainer) {
+                    videoPath = mMediaPath + videoContainer.get(fileId).filename;
+                    videoList.add(videoPath);
+                }
+                return videoList;
+            }
+        }
+        return getVideoList();
+    }
+
     public List<String> getVideoList() {
         if (adMediaInfo == null) return null;
         List<String> videoList = new ArrayList<>();
@@ -90,6 +113,30 @@ public class MediaStrategyMgr {
         }
         return videoList;
     }
+
+
+    public List<String> getImageListWithIntervalCheck() {
+        String curTime = Utils.getCurrentTime();
+        HashMap<String, AdMediaInfo.OneImageInterval> alias = adMediaInfo.imageIntervalContainer;
+        HashMap<String, AdMediaInfo.ImageAdInfo> imageContainer =  adMediaInfo.imageContainer;
+        if (alias == null ||
+                alias.size() <= 0) return getImageList();
+        Set<String> intervalIds = alias.keySet();
+        for (String intervalId : intervalIds) {
+            AdMediaInfo.OneImageInterval one = alias.get(intervalId);
+            if (Utils.isTimeInInterval(curTime, one.begin, one.end)) {
+                List<String> imageList = new ArrayList<>();
+                String imagePath = null;
+                for (String fileId : one.fileContainer) {
+                    imagePath = mMediaPath + imageContainer.get(fileId).filename;
+                    imageList.add(imagePath);
+                }
+                return imageList;
+            }
+        }
+        return getImageList();
+    }
+
 
     public List<String> getImageList() {
         if (adMediaInfo == null) return null;

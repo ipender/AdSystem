@@ -58,10 +58,10 @@ public class DownloadService extends Service {
     /**服务绑定**/
     private Binder mBinder;
     /***线程池**/
-    private ExecutorService mThreadPool ;
-    /***下载任务列表**/
+    private ExecutorService mThreadPool;
+    /***下载任务列表***/
     private LinkedList<DownloadTask> mListTask;
-    /***广播接收者**/
+    /***广播接收者***/
     private BroadcastReceiver mReceiver;
 
 

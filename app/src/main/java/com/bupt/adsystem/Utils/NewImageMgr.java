@@ -59,6 +59,11 @@ public class NewImageMgr implements UpdateMedia{
                 mFilePath = getImageByOrder();
                 if (mFilePath != null) {
                     mImageFile = new File(mFilePath);
+                    if (!mImageFile.exists()) {
+                        if (DEBUG) Log.e(TAG, "This Image Should Exists! : " + mFilePath);
+                        mImageHandler.sendEmptyMessageDelayed(MSG_SWITCH_IMAGE, IMAGE_SWITCH_DURATION);
+                        return;
+                    }
                     setNextAnimation();
                     Uri uri = Uri.fromFile(mImageFile);
                     if (uri != null) {
@@ -161,7 +166,9 @@ public class NewImageMgr implements UpdateMedia{
     @Override
     public void updateWhenStrategyChanged() {
         mImageList = mStrategyMgr.getImageList();
-        mImageHandler.sendEmptyMessage(MSG_SWITCH_IMAGE);
+        if (!mImageHandler.hasMessages(MSG_SWITCH_IMAGE)) {
+            mImageHandler.sendEmptyMessage(MSG_SWITCH_IMAGE);
+        }
     }
 
     @Override

@@ -6,7 +6,6 @@ import android.webkit.URLUtil;
 
 import com.bupt.adsystem.Utils.AdImageCtrl;
 import com.bupt.adsystem.Utils.AdSystemConfig;
-import com.bupt.adsystem.Utils.AlarmUtil;
 import com.bupt.adsystem.Utils.FileDirMgr;
 import com.bupt.adsystem.Utils.FileListMgr;
 import com.bupt.adsystem.downloadtask.DownloadManager;

@@ -1,4 +1,4 @@
-package com.bupt.adsystem.Utils;
+package com.bupt.adsystem.RemoteServer;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -8,8 +8,16 @@ import android.database.Cursor;
 import android.text.format.Time;
 import android.util.Log;
 
+import com.bupt.adsystem.RemoteServer.AdMediaInfo;
+import com.bupt.adsystem.Utils.AdSystemConfig;
+import com.bupt.adsystem.Utils.FileListMgr;
 import com.bupt.adsystem.receiver.TimerAlarmReceiver;
 import com.bupt.adsystem.view.Settings;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by hadoop on 16-8-21.
@@ -30,8 +38,12 @@ public class AlarmUtil {
     public static final int RESTART_RequestCode = 100;
     public static final int VOICE_ON_RequestCode = 101;
     public static final int VOICE_OFF_RequestCode = 102;
-    public static int VIDEO_INTERVAL_RequestCode = 200;      // 200 ~ 299 to recycling use
-    public static int IMAGE_INTERVAL_RequestCode = 300;      // 200 ~ 399 to recycling use
+    public static final int[] VIDEO_UPDATE_CODE_INTERVAL = {200, 299}; // 200 ~ 299 to recycling use
+    public static final int[] IMAGE_UPDATE_CODE_INTERVAL = {300, 399}; // 200 ~ 399 to recycling use
+    public static int VIDEO_INTERVAL_RequestCode = 200;
+    public static int IMAGE_INTERVAL_RequestCode = 300;
+    public static List<Integer> mVideoRequestCode = new ArrayList<>();
+    public static List<Integer> mImageRequestCode = new ArrayList<>();
 
 
     private static AlarmManager sAlarmManager;
@@ -60,11 +72,11 @@ public class AlarmUtil {
         } else {
             intent.setAction(VideoIntervalEnd);
         }
-        VIDEO_INTERVAL_RequestCode++;
-        if (VIDEO_INTERVAL_RequestCode >= 300) VIDEO_INTERVAL_RequestCode = 200;
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, VIDEO_INTERVAL_RequestCode,
+        int requestCode = getOneVideoRequestCode();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode,
                 intent, 0);
-        if (DEBUG) Log.d(TAG, "Video Time Diff: " + (alarmUpTimeInMillis - System.currentTimeMillis()));
+        if (DEBUG)
+            Log.d(TAG, "Video Time Diff: " + (alarmUpTimeInMillis - System.currentTimeMillis()));
         am.set(AlarmManager.RTC_WAKEUP, alarmUpTimeInMillis, pendingIntent);
     }
 
@@ -79,12 +91,12 @@ public class AlarmUtil {
         } else {
             intent.setAction(ImageIntervalEnd);
         }
-        IMAGE_INTERVAL_RequestCode++;
-        if (IMAGE_INTERVAL_RequestCode >= 300) IMAGE_INTERVAL_RequestCode = 200;
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, IMAGE_INTERVAL_RequestCode,
+        int requestCode = getOneVideoRequestCode();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode,
                 intent, 0);
 
-        if (DEBUG) Log.d(TAG, "Image Change Start: " + isStart + "at: " + (alarmUpTimeInMillis - System.currentTimeMillis()));
+        if (DEBUG)
+            Log.d(TAG, "Image Change Start: " + isStart + "at: " + (alarmUpTimeInMillis - System.currentTimeMillis()));
 //        long timeDiff = 10000;
         am.set(AlarmManager.RTC_WAKEUP, alarmUpTimeInMillis, pendingIntent);
     }
@@ -106,7 +118,8 @@ public class AlarmUtil {
         }
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode,
                 intent, 0);
-        if (DEBUG) Log.d(TAG, "Voice Switch: " + isOn + " in: " + (alarmUpTimeInMillis - System.currentTimeMillis()));
+        if (DEBUG)
+            Log.d(TAG, "Voice Switch: " + isOn + " in: " + (alarmUpTimeInMillis - System.currentTimeMillis()));
         am.set(AlarmManager.RTC_WAKEUP, alarmUpTimeInMillis, pendingIntent);
     }
 
@@ -122,7 +135,8 @@ public class AlarmUtil {
         intent.setAction(SystemRestart);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, RESTART_RequestCode,
                 intent, 0);
-        if (DEBUG) Log.d(TAG, "Restart Time in " + (alarmUpTimeInMillis - System.currentTimeMillis()) );
+        if (DEBUG)
+            Log.d(TAG, "Restart Time in " + (alarmUpTimeInMillis - System.currentTimeMillis()));
         am.set(AlarmManager.RTC_WAKEUP, alarmUpTimeInMillis, pendingIntent);
     }
 
@@ -178,6 +192,48 @@ public class AlarmUtil {
             } while (imageIntervalCursor.moveToNext());
         }
 
+    }
+
+    static public int getOneVideoRequestCode() {
+        VIDEO_INTERVAL_RequestCode++;
+        if (VIDEO_INTERVAL_RequestCode < VIDEO_UPDATE_CODE_INTERVAL[0]) {
+            VIDEO_INTERVAL_RequestCode = VIDEO_UPDATE_CODE_INTERVAL[0];
+        } else if (VIDEO_INTERVAL_RequestCode >= VIDEO_UPDATE_CODE_INTERVAL[1]) {
+            VIDEO_INTERVAL_RequestCode = VIDEO_UPDATE_CODE_INTERVAL[0];
+        }
+        mVideoRequestCode.add(VIDEO_INTERVAL_RequestCode);
+        return VIDEO_INTERVAL_RequestCode;
+    }
+
+    static public int getOneImageRequestCode() {
+        IMAGE_INTERVAL_RequestCode++;
+        if (IMAGE_INTERVAL_RequestCode < IMAGE_UPDATE_CODE_INTERVAL[0]) {
+            IMAGE_INTERVAL_RequestCode = IMAGE_UPDATE_CODE_INTERVAL[0];
+        } else if (IMAGE_INTERVAL_RequestCode >= IMAGE_UPDATE_CODE_INTERVAL[1]) {
+            IMAGE_INTERVAL_RequestCode = IMAGE_UPDATE_CODE_INTERVAL[0];
+        }
+        mImageRequestCode.add(IMAGE_INTERVAL_RequestCode);
+        return IMAGE_INTERVAL_RequestCode;
+    }
+
+    static public void setVideoAlarmUpBroadcast(Context context, final HashMap<String, AdMediaInfo.OneVideoInterval> hashMap) {
+        Set<String> keySet = hashMap.keySet();
+        AdMediaInfo.OneVideoInterval alias;
+        for (String key : keySet) {
+            alias = hashMap.get(key);
+            setVideoChangeTimeBroadcast(context, alias.begin, true);
+            setVideoChangeTimeBroadcast(context, alias.end, false);
+        }
+    }
+
+    static public void setImageAlarmUpBroadcast(Context context, final HashMap<String, AdMediaInfo.OneImageInterval> hashMap) {
+        Set<String> keySet = hashMap.keySet();
+        AdMediaInfo.OneImageInterval alias;
+        for (String key : keySet) {
+            alias = hashMap.get(key);
+            setImageChangeTimeBroadcast(context, alias.begin, true);
+            setImageChangeTimeBroadcast(context, alias.end, false);
+        }
     }
 
 }

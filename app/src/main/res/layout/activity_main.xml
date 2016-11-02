@@ -16,24 +16,24 @@
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="10" >
+        android:layout_weight="10"
+        android:background="@color/rose_gold">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="0层"/>
+
         <Button
             android:id="@+id/button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@color/colorAccent"
-            android:text="@string/dummy_button"/>
-        <TextView
-            android:id="@+id/textView"
+            android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textSize="@dimen/text_size"
-            android:textColor="@color/colorAccent"
-            android:background="@color/colorPrimaryDark"/>
+            android:background="#00000000"
+            android:text="测试"/>
         
         <ImageView
             android:id="@+id/logo_image"
@@ -111,10 +111,22 @@
         android:background="@color/rose_gold">
 
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/telephony_text"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
             android:gravity="center"
-            android:text="There is something to show!"/>
+            android:text="维保电话：010-1234567"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_toRightOf="@id/telephony_text"
+            android:gravity="center"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:text="今天晴转多云,10~25C"/>
 
     </RelativeLayout>
 </LinearLayout>
