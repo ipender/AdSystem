@@ -1,335 +1,330 @@
 package com.bupt.adsystem.view;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
-import android.hardware.Camera;
+import android.content.Context;
+import android.hardware.usb.UsbManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.ImageSwitcher;
+import android.widget.TextView;
+import android.widget.VideoView;
 
+import com.android.internal.telephony.ITelephony;
+import com.bupt.adsystem.Camera.CameraApp;
 import com.bupt.adsystem.R;
-import com.github.faucamp.simplertmp.RtmpHandler;
+import com.bupt.adsystem.RemoteServer.ServerRequest;
+import com.bupt.adsystem.Utils.AdImageCtrl;
+import com.bupt.adsystem.Utils.AdSystemConfig;
+import com.bupt.adsystem.Utils.AdVideoCtrl;
+import com.bupt.adsystem.Utils.NewImageMgr;
+import com.bupt.adsystem.Utils.NewVideoMgr;
+import com.bupt.adsystem.downloadtask.DownloadManager;
+import com.serenegiant.usb.USBMonitor;
+import com.serenegiant.usb.UVCCamera;
 
-import net.ossrs.yasea.SrsCameraView;
-import net.ossrs.yasea.SrsEncodeHandler;
-import net.ossrs.yasea.SrsPublisher;
-import net.ossrs.yasea.SrsRecordHandler;
+import java.lang.reflect.Method;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.util.Random;
+public class MainActivity extends Activity {
 
-public class MainActivity extends Activity implements RtmpHandler.RtmpListener,
-                        SrsRecordHandler.SrsRecordListener, SrsEncodeHandler.SrsEncodeListener {
+    private static final String TAG = "MainActivity";
+    private static final boolean DEBUG = AdSystemConfig.DEBUG;
 
-    private static final String TAG = "Yasea";
+    // for thread pool
+//    private static final int CORE_POOL_SIZE = 1;		// initial/minimum threads
+//    private static final int MAX_POOL_SIZE = 4;			// maximum threads
+//    private static final int KEEP_ALIVE_TIME = 10;		// time periods while keep the idle thread
+//    protected static final ThreadPoolExecutor EXECUTER
+//            = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME,
+//            TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
-    Button btnPublish = null;
-    Button btnSwitchCamera = null;
-    Button btnRecord = null;
-    Button btnSwitchEncoder = null;
+    // for accessing USB and USB camera
+    private USBMonitor mUSBMonitor;
+    private UsbManager mUsbManager;
+    private UVCCamera mUVCCamera;
 
-    private SharedPreferences sp;
-    private String rtmpUrl = "rtmp://aokai.lymatrix.com/aokai/test25";
-    //getRandomAlphaString(3) + '/' + getRandomAlphaDigitString(5);
-    private String recPath = Environment.getExternalStorageDirectory().getPath() + "/test.mp4";
+    private ImageSwitcher mImageSwitcher;
+    private VideoView mVideoView;
+    private TextureView mTextureView;
 
-    private SrsPublisher mPublisher;
+    private Button button;
+    private TextView mElevatorTextView;
+    private MediaPlayer mediaPlayer;
+    private TextView textView;
+    private String resPath;
+    private CameraApp mCameraApp;
+    private TelephonyManager mTelephonyManager;
+    private Context mContext;
+    private ServerRequest mServerRequest;
+    private AdImageCtrl mAdImageCtrl;
+    private AdVideoCtrl mAdVideoCtrl;
+
+    public static final int Elevator_Info = 1;
+
+    private Handler mMainHandler = new Handler(){
+        @Override
+        public void dispatchMessage(Message msg) {
+            if (msg.what == Elevator_Info) {
+                String elevatorInfo = (String) msg.obj;
+                mElevatorTextView.setText(elevatorInfo);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE );
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                            WindowManager.LayoutParams.FLAG_FULLSCREEN
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setContentView(R.layout.activity_main);
+        this.setContentView(R.layout.activity_main);
+        mContext = this;
+        mTelephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-        // response screen rotation event
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+        mImageSwitcher = (ImageSwitcher) findViewById(R.id.image_switcher);
+        button = (Button) findViewById(R.id.button);
+        textView = (TextView) findViewById(R.id.textView);
+        mTextureView = (TextureView) findViewById(R.id.textureView);
+        mVideoView = (VideoView) findViewById(R.id.surface_view);
+        mElevatorTextView = (TextView) findViewById(R.id.Sensor_TextView);
+        mTextureView.setVisibility(View.VISIBLE);
+        mVideoView.setVisibility(View.INVISIBLE);
+        mVideoView.setZOrderOnTop(true);
 
-        // restore data.
-        sp = getSharedPreferences("Yasea", MODE_PRIVATE);
-        rtmpUrl = sp.getString("rtmpUrl", rtmpUrl);
+        DownloadManager.instance(getApplicationContext());
 
-        // initialize url.
-        final EditText efu = (EditText) findViewById(R.id.url);
-        efu.setText(rtmpUrl);
 
-        btnPublish = (Button) findViewById(R.id.publish);
-        btnSwitchCamera = (Button) findViewById(R.id.swCam);
-        btnRecord = (Button) findViewById(R.id.record);
-        btnSwitchEncoder = (Button) findViewById(R.id.swEnc);
-
-        mPublisher = new SrsPublisher((SrsCameraView) findViewById(R.id.preview));
-        mPublisher.setEncodeHandler(new SrsEncodeHandler(this));
-        mPublisher.setRtmpHandler(new RtmpHandler(this));
-        mPublisher.setRecordHandler(new SrsRecordHandler(this));
-
-        btnPublish.setOnClickListener(new View.OnClickListener() {
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (btnPublish.getText().toString().contentEquals("publish")) {
-                    rtmpUrl = efu.getText().toString();
-                    SharedPreferences.Editor editor = sp.edit();
-                    editor.putString("rtmpUrl", rtmpUrl);
-                    editor.apply();
+//                Time time = new Time("GMT+8");
+//                time.set(System.currentTimeMillis() + 10000);
+//                String alarmTime = String.format("%02d:%02d:%02d", time.hour, time.minute, time.second);
+//                Log.d(TAG, alarmTime);
+//                AlarmUtil.setImageChangeTimeBroadcast(mContext, alarmTime, true);
+//                AlarmUtil.setVideoChangeTimeBroadcast(mContext, alarmTime, true);
 
-                    mPublisher.setPreviewResolution(1280, 720);
-                    mPublisher.setOutputResolution(384, 640);
-                    mPublisher.setVideoSmoothMode();
-                    mPublisher.startPublish(rtmpUrl);
+//                String url = "http://117.158.178.198:8010/esmp-ly-o-websvr/ws/esmp?wsdl";
+//                JSONObject jsonObject = new JSONObject();
+//                Handler handler = new Handler();
+//                try {
+//                    jsonObject.put("deviceId", "10000000000000000001");
+//                    Log.d(TAG, "Request Json Content: \n" +
+//                            jsonObject.toString());
+//
+////                    MiscUtil.postRequestTextFile(url, jsonObject.toString(), handler);
+////                    MiscUtil.getRequestTextFile(url+"="+jsonObject.toString(), handler);
+////                    MiscUtil.requestJsonFromWebservice(url, jsonObject.toString(), handler);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//
+////                String urlGet = MiscUtil.generateHttpGetUrl(0, 1, 80, 0, 0, 1, -89);
+////                MiscUtil.getRequestTextFile(urlGet, handler);
+                Class<TelephonyManager> c = TelephonyManager.class;
+                try
+                {
+                    Method getITelephonyMethod = c.getDeclaredMethod("getITelephony", (Class[]) null);
+                    getITelephonyMethod.setAccessible(true);
+                    ITelephony iTelephony = null;
+                    iTelephony = (ITelephony) getITelephonyMethod.invoke(mTelephonyManager, (Object[]) null);
+//                   iTelephony.endCall();
+//                    iTelephony.answerRingingCall();
 
-                    if (btnSwitchEncoder.getText().toString().contentEquals("soft encoder")) {
-                        Toast.makeText(getApplicationContext(), "Use hard encoder", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Use soft encoder", Toast.LENGTH_SHORT).show();
-                    }
-                    btnPublish.setText("stop");
-                    btnSwitchEncoder.setEnabled(false);
-                } else if (btnPublish.getText().toString().contentEquals("stop")) {
-                    mPublisher.stopPublish();
-                    mPublisher.stopRecord();
-                    btnPublish.setText("publish");
-                    btnRecord.setText("record");
-                    btnSwitchEncoder.setEnabled(true);
+                    iTelephony.dial("+8618811610769");
                 }
+                catch (Exception e)
+                {
+                    Log.e(TAG, "Fail to answer ring call.", e);
+                }
+                if (DEBUG) Log.d(TAG, "Button Pressed!");
             }
         });
 
-        btnSwitchCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (Camera.getNumberOfCameras() > 0) {
-                    mPublisher.switchCameraFace((mPublisher.getCamraId() + 1) % Camera.getNumberOfCameras());
-                }
-            }
-        });
+        NewImageMgr.instance(mContext, mImageSwitcher);
+        NewVideoMgr.instance(mContext, mVideoView);
+        ServerRequest request = new ServerRequest(mContext, mMainHandler);
+        request.setFloorTextView(textView);
 
-        btnRecord.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (btnRecord.getText().toString().contentEquals("record")) {
-                    mPublisher.startRecord(recPath);
-                    btnRecord.setText("pause");
-                } else if (btnRecord.getText().toString().contentEquals("pause")) {
-                    mPublisher.pauseRecord();
-                    btnRecord.setText("resume");
-                } else if (btnRecord.getText().toString().contentEquals("resume")) {
-                    mPublisher.resumeRecord();
-                    btnRecord.setText("pause");
-                }
-            }
-        });
+//        mAdVideoCtrl = AdVideoCtrl.instance(mContext, mVideoView);
+//        mAdImageCtrl = AdImageCtrl.instance(mContext, mImageSwitcher);
+//        mServerRequest = new ServerRequest(this);
+//        mCameraApp = new CameraApp(this, mTextureView);
+//        AdImageCtrl.instance(this, mImageSwitcher);
+//        String url = "http://192.168.1.101:8080/download/purge_piece.mp4";
+//        String url2 = "http://192.168.1.101:8080/download/coherence_piece.mp4";
+//        String filename = URLUtil.guessFileName(url, null, null);
+//        String filename2 = URLUtil.guessFileName(url2, null, null);
+//        String filepath = FileDirMgr.instance().getCameraStoragePath();
+//        DownloadManager.instance(this).startDownload(url, filepath, filename,
+//                new OnDownload() {
+//                    @Override
+//                    public void onDownloading(String url, int finished) {
+//                        if (DEBUG) Log.d(TAG, "downloaded1:" + finished);
+//                    }
+//
+//                    @Override
+//                    public void onDownloadFinished(File downloadFile) {
+//                        if (DEBUG) Log.d(TAG, downloadFile.getAbsolutePath());
+//                    }
+//                });
+//        DownloadManager.instance(this).startDownload(url2, filepath, filename2,
+//                new OnDownload() {
+//                    @Override
+//                    public void onDownloading(String url, int finished) {
+//                        if (DEBUG) Log.d(TAG, "downloaded2:" + finished);
+//                    }
+//
+//                    @Override
+//                    public void onDownloadFinished(File downloadFile) {
+//                        if (DEBUG) Log.d(TAG, downloadFile.getAbsolutePath());
+//                    }
+//                });
+//        int callState = mTelephonyManager.getCallState();
+//        CellLocation cellLocation = mTelephonyManager.getCellLocation();
+//        cellLocation.requestLocationUpdate();
+//        mAdVideoCtrl = AdVideoCtrl.instance();
+//        mTextureView.setVisibility(View.INVISIBLE);
+//        mVideoView.setVisibility(View.VISIBLE);
+//        mAdVideoCtrl.setVideoView(mVideoView);
+//        mAdVideoCtrl.startPlayView();
 
-        btnSwitchEncoder.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (btnSwitchEncoder.getText().toString().contentEquals("soft encoder")) {
-                    mPublisher.swithToSoftEncoder();
-                    btnSwitchEncoder.setText("hard encoder");
-                } else if (btnSwitchEncoder.getText().toString().contentEquals("hard encoder")) {
-                    mPublisher.swithToHardEncoder();
-                    btnSwitchEncoder.setText("soft encoder");
-                }
-            }
-        });
+//        resPath = mAdVideoCtrl.getVideoByOrder();
+//        mVideoView.setVideoPath(resPath);
+//        mVideoView.setZOrderOnTop(true);
+//        mVideoView.start();
+//        mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//            @Override
+//            public void onPrepared(MediaPlayer mp) {
+//                mVideoView.start();
+//            }
+//        });
+
+//        mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//            @Override
+//            public void onCompletion(MediaPlayer mp) {
+//                mVideoView.setVideoPath(mAdVideoCtrl.getVideoByOrder());
+//                mVideoView.start();
+//            }
+//        });
+//        SurfaceHolder surfaceHolder = adVideoView.getHolder();
+//        surfaceHolder.setFixedSize(720, 480);
+//        surfaceHolder.addCallback(this);
+//        mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
+//        mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+//        PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(mUSBMonitor.ACTION_USB_PERMISSION), 0);
+//        HashMap<String, UsbDevice> usbDevcieList = mUsbManager.getDeviceList();
+//        if(usbDevcieList.size() == 1){
+//            Toast.makeText(this, "find a USB device!", Toast.LENGTH_LONG).show();
+//            Set<String> keySet = usbDevcieList.keySet();
+//            for (String key : keySet)
+//            mUsbManager.requestPermission(usbDevcieList.get(key), mPermissionIntent);
+//        } else {
+//            Toast.makeText(this, "USB device Num is:" + usbDevcieList.size(), Toast.LENGTH_LONG).show();
+//        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        final Button btn = (Button) findViewById(R.id.publish);
-        btn.setEnabled(true);
-        mPublisher.resumeRecord();
+//        mCameraApp.registerUsbMonitor();
+//        mCameraApp.startPreview();
     }
 
     @Override
     protected void onPause() {
+//        mCameraApp.unregisterUsbMonitor();
+//        mCameraApp.startPreview();
         super.onPause();
-        mPublisher.pauseRecord();
     }
 
     @Override
     protected void onDestroy() {
+//        mCameraApp.destroy();
+        mServerRequest.httpDisconnect();
         super.onDestroy();
-        mPublisher.stopPublish();
-        mPublisher.stopRecord();
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mPublisher.stopEncode();
-        mPublisher.stopRecord();
-        btnRecord.setText("record");
-        mPublisher.setScreenOrientation(newConfig.orientation);
-        if (btnPublish.getText().toString().contentEquals("stop")) {
-            mPublisher.startEncode();
-        }
-    }
-
-    private static String getRandomAlphaString(int length) {
-        String base = "abcdefghijklmnopqrstuvwxyz";
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            int number = random.nextInt(base.length());
-            sb.append(base.charAt(number));
-        }
-        return sb.toString();
-    }
-
-    private static String getRandomAlphaDigitString(int length) {
-        String base = "abcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            int number = random.nextInt(base.length());
-            sb.append(base.charAt(number));
-        }
-        return sb.toString();
-    }
-
-    private void handleException(Exception e) {
-        try {
-            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-            mPublisher.stopPublish();
-            mPublisher.stopRecord();
-            btnPublish.setText("publish");
-            btnRecord.setText("record");
-            btnSwitchEncoder.setEnabled(true);
-        } catch (Exception e1) {
-            // Ignore
-        }
-    }
-
-    // Implementation of SrsRtmpListener.
-
-    @Override
-    public void onRtmpConnecting(String msg) {
-        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRtmpConnected(String msg) {
-        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRtmpVideoStreaming() {
-    }
-
-    @Override
-    public void onRtmpAudioStreaming() {
-    }
-
-    @Override
-    public void onRtmpStopped() {
-        Toast.makeText(getApplicationContext(), "Stopped", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRtmpDisconnected() {
-        Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRtmpVideoFpsChanged(double fps) {
-        Log.i(TAG, String.format("Output Fps: %f", fps));
-    }
-
-    @Override
-    public void onRtmpVideoBitrateChanged(double bitrate) {
-        int rate = (int) bitrate;
-        if (rate / 1000 > 0) {
-            Log.i(TAG, String.format("Video bitrate: %f kbps", bitrate / 1000));
-        } else {
-            Log.i(TAG, String.format("Video bitrate: %d bps", rate));
-        }
-    }
-
-    @Override
-    public void onRtmpAudioBitrateChanged(double bitrate) {
-        int rate = (int) bitrate;
-        if (rate / 1000 > 0) {
-            Log.i(TAG, String.format("Audio bitrate: %f kbps", bitrate / 1000));
-        } else {
-            Log.i(TAG, String.format("Audio bitrate: %d bps", rate));
-        }
-    }
-
-    @Override
-    public void onRtmpSocketException(SocketException e) {
-        handleException(e);
-    }
-
-    @Override
-    public void onRtmpIOException(IOException e) {
-        handleException(e);
-    }
-
-    @Override
-    public void onRtmpIllegalArgumentException(IllegalArgumentException e) {
-        handleException(e);
-    }
-
-    @Override
-    public void onRtmpIllegalStateException(IllegalStateException e) {
-        handleException(e);
-    }
-
-    // Implementation of SrsRecordHandler.
-
-    @Override
-    public void onRecordPause() {
-        Toast.makeText(getApplicationContext(), "Record paused", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRecordResume() {
-        Toast.makeText(getApplicationContext(), "Record resumed", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRecordStarted(String msg) {
-        Toast.makeText(getApplicationContext(), "Recording file: " + msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRecordFinished(String msg) {
-        Toast.makeText(getApplicationContext(), "MP4 file saved: " + msg, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRecordIOException(IOException e) {
-        handleException(e);
-    }
-
-    @Override
-    public void onRecordIllegalArgumentException(IllegalArgumentException e) {
-        handleException(e);
-    }
-
-    // Implementation of SrsEncodeHandler.
-
-    @Override
-    public void onNetworkWeak() {
-        Toast.makeText(getApplicationContext(), "Network weak", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onNetworkResume() {
-        Toast.makeText(getApplicationContext(), "Network resume", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onEncodeIllegalArgumentException(IllegalArgumentException e) {
-        handleException(e);
-    }
+//    private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
+//        @Override
+//        public void onAttach(UsbDevice device) {
+//
+//        }
+//
+//        @Override
+//        public void onDettach(UsbDevice device) {
+//
+//        }
+//
+//        @Override
+//        public void onConnect(UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock, boolean createNew) {
+//            if (mUVCCamera != null)
+//                mUVCCamera.destroy();
+//            mUVCCamera = new UVCCamera();
+//            EXECUTER.execute(new Runnable() {
+//                @Override
+//                public void run() {
+//                    mUVCCamera.open(ctrlBlock);
+//                    mUVCCamera.setStatusCallback(new IStatusCallback() {
+//                        @Override
+//                        public void onStatus(final int statusClass, final int event, final int selector,
+//                                             final int statusAttribute, final ByteBuffer data) {
+//
+//                        }
+//                    });
+//                    if (mSurface != null) {
+//                        mSurface.release();
+//                        mSurface = null;
+//                    }
+//                    try {
+//                        mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
+//                    } catch (final IllegalArgumentException e) {
+//                        // fallback to YUV mode
+//                        try {
+//                            mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+//                        } catch (final IllegalArgumentException e1) {
+//                            mUVCCamera.destroy();
+//                            mUVCCamera = null;
+//                        }
+//                    }
+//                    if (mUVCCamera != null) {
+//                        final SurfaceTexture st = mTextureView.getSurfaceTexture();
+//                        if (st != null)
+//                            mSurface = new Surface(st);
+//                        mUVCCamera.setPreviewDisplay(mSurface);
+////                        mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_RGB565/*UVCCamera.PIXEL_FORMAT_NV21*/);
+//                        mUVCCamera.startPreview();
+//                    }
+//                }
+//            });
+//
+//        }
+//
+//        @Override
+//        public void onDisconnect(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock) {
+//            if (mUVCCamera != null) {
+//                mUVCCamera.close();
+//                if (mSurface != null) {
+//                    mSurface.release();
+//                    mSurface = null;
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void onCancel() {
+//
+//        }
+//    };
 }

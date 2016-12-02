@@ -45,7 +45,7 @@ public class MyApplication extends Application {
         Settings.Device.DoorOpenTime = appSettings.getFloat(Settings.Device.KEY_DoorOpenTime, 30);
 
         Settings.SystemInit(mContext);
-//        AlarmUtil.initAlarmWhenStartUp(mContext);
+        AlarmUtil.initAlarmWhenStartUp(mContext);
 
     }
 
