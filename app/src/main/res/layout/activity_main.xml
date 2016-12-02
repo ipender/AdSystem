@@ -1,132 +1,61 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:weightSum="100"
-    tools:context=".view.MainActivity">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context="net.ossrs.yasea.demo.MainActivity">
 
-    <SurfaceView
-        android:layout_width="0px"
-        android:layout_height="0px"
-        android:visibility="gone" />
-
-    <RelativeLayout
-        android:id="@+id/relative_layout"
+    <net.ossrs.yasea.SrsCameraView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/preview"
         android:layout_alignParentTop="true"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="10"
-        android:background="@color/rose_gold">
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_centerInParent="true"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="0层"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="publish"
+        android:id="@+id/publish"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:background="#00000000"
-            android:text="测试"/>
-        
-        <ImageView
-            android:id="@+id/logo_image"
-            android:layout_width="100px"
-            android:layout_height="match_parent"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
-            android:src="@mipmap/elevator_guard"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="switch"
+        android:id="@+id/swCam"
+        android:layout_alignBottom="@+id/publish"
+        android:layout_toRightOf="@+id/publish" />
 
-    </RelativeLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="record"
+        android:id="@+id/record"
+        android:layout_alignBottom="@+id/publish"
+        android:layout_toRightOf="@id/swCam" />
 
-    <FrameLayout
-        android:id="@+id/video_frame_layout"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="35">
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <!--the reason VideoView is wraped by RelativeLayout is to make video fill the VideoView-->
-            <VideoView
-                android:id="@+id/surface_view"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentLeft="true"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:foregroundGravity="center"
-                android:background="@color/colorPrimary"
-                android:visibility="visible"/>
-        </RelativeLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="soft encoder"
+        android:id="@+id/swEnc"
+        android:layout_alignBottom="@+id/publish"
+        android:layout_toRightOf="@id/record"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
 
-        <TextureView
-            android:id="@+id/textureView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="invisible"/>
-    </FrameLayout>
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:id="@+id/url"
+        android:textColor="@color/accent_material_light" />
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="10"
-        android:background="@color/rose_gold">
-
-        <TextView
-            android:id="@+id/Sensor_TextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="sensor state"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true" />
-
-    </RelativeLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="35">
-        <ImageSwitcher
-            android:id="@+id/image_switcher"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/black_overlay"/>
-    </FrameLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="10"
-        android:background="@color/rose_gold">
-
-        <TextView
-            android:id="@+id/telephony_text"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:gravity="center"
-            android:text="维保电话：010-1234567"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_toRightOf="@id/telephony_text"
-            android:gravity="center"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
-            android:text="今天晴转多云,10~25C"/>
-
-    </RelativeLayout>
-</LinearLayout>
+</RelativeLayout>
