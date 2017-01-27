@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/debug/drawable-v21/star.xml",
+        "source": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/drawable-v21/star.xml"
+    },
+    {
+        "merged": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/res/merged/debug/drawable-v21/star.xml",
+        "source": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/drawable-v21/star.xml"
+    }
+]

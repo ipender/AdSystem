@@ -32,8 +32,8 @@ public class ServerRequest {
     private static final String TAG = "ServerRequest";
     private static final boolean DEBUG = AdSystemConfig.DEBUG;
 
-    private static final String HOST_NAME = "http://10.210.12.237:8080";
-    private String mWebServerUrl = "http://117.158.178.198:8010/esmp-ly-o-websvr/ws/esmp?wsdl";
+    private static final String HOST_NAME = "http://aokai.lymatrix.com";
+    private String mWebServerUrl = "http://aokai2.lymatrix.com/ws/esmp?wsdl";
     private static final String MethodName = "DeviceAdvScheduleDownRealVersion";
 
     private static final int MSG_REQUEST_OK = 0x01;
@@ -91,6 +91,7 @@ public class ServerRequest {
             }
         };
         timer.scheduleAtFixedRate(timerTask, 0, 10000);
+
         Timer time2 = new Timer();
         TimerTask timerTask2 = new TimerTask() {
             @Override
@@ -169,6 +170,7 @@ public class ServerRequest {
                         receiver.receiveMessage(message);
                     }
                 } catch (JSONException e) {
+
                     e.printStackTrace();
                 }
             } else if (msg.what == MiscUtil.QUEST_SUCCESS) {

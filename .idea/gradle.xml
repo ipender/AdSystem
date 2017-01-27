@@ -8,21 +8,23 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/anyrtc" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/library" />
             <option value="$PROJECT_DIR$/libuvccamera" />
             <option value="$PROJECT_DIR$/sensordriver" />
             <option value="$PROJECT_DIR$/xutils" />
+            <option value="$PROJECT_DIR$/yasea" />
           </set>
         </option>
         <option name="myModules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/anyrtc" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/library" />
             <option value="$PROJECT_DIR$/libuvccamera" />
             <option value="$PROJECT_DIR$/sensordriver" />
             <option value="$PROJECT_DIR$/xutils" />
+            <option value="$PROJECT_DIR$/yasea" />
           </set>
         </option>
       </GradleProjectSettings>

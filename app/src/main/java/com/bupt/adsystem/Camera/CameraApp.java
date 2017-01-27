@@ -6,17 +6,26 @@ import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
 import android.widget.VideoView;
 
 import com.bupt.adsystem.Utils.AdSystemConfig;
+import com.bupt.adsystem.view.LifeCycle;
+import com.bupt.adsystem.view.LifeCycleMgr;
+import com.serenegiant.usb.IFrameCallback;
 import com.serenegiant.usb.IStatusCallback;
+import com.serenegiant.usb.Size;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -25,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by hadoop on 16-8-11.
  */
-public class CameraApp {
+public class CameraApp implements LifeCycle {
 
     private Context mContext;
     private static final String TAG = "CameraApp";
@@ -54,15 +63,18 @@ public class CameraApp {
 //        mVideoView = videoView;
 //        mVideoView.setZOrderOnTop(true);
         mTextureView = videoView;
+        mTextureView.setVisibility(View.VISIBLE);
         mUsbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         mUSBMonitor = new USBMonitor(mContext, mOnDeviceConnectListener);
-        PendingIntent mPermissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(mUSBMonitor.ACTION_USB_PERMISSION), 0);
-        HashMap<String, UsbDevice> usbDevcieList = mUsbManager.getDeviceList();
-        if(usbDevcieList.size() == 1){
-            Set<String> keySet = usbDevcieList.keySet();
-            for (String key : keySet)
-            mUsbManager.requestPermission(usbDevcieList.get(key), mPermissionIntent);
+        mUSBMonitor.register();
+        List<UsbDevice> usbDevcieList = mUSBMonitor.getUVCCamreaDeviceList();
+        if (DEBUG) Log.d(TAG, "Usb Device Number: " + usbDevcieList.size());
+        for (UsbDevice usb : usbDevcieList) {
+            if (DEBUG) Log.d(TAG, "    Name: " + usb.getDeviceName());
+//            mUSBMonitor.requestPermission(usb);
         }
+
+        LifeCycleMgr.registerLifeCycle(this);
     }
 
     public void startPreview() {
@@ -93,7 +105,8 @@ public class CameraApp {
     private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
         @Override
         public void onAttach(UsbDevice device) {
-
+            if (DEBUG) Log.d(TAG, " Got a device: " + device.getDeviceName());
+            mUSBMonitor.requestPermission(device);
         }
 
         @Override
@@ -103,6 +116,8 @@ public class CameraApp {
 
         @Override
         public void onConnect(UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock, boolean createNew) {
+            if (DEBUG) Log.d(TAG, "UVCCamera is connected!!!" +
+                    "    " + device + "  " + ctrlBlock + "  " + createNew);
             if (mUVCCamera != null)
                 mUVCCamera.destroy();
             mUVCCamera = new UVCCamera();
@@ -114,7 +129,7 @@ public class CameraApp {
                         @Override
                         public void onStatus(final int statusClass, final int event, final int selector,
                                              final int statusAttribute, final ByteBuffer data) {
-
+                            if (DEBUG) Log.d(TAG, "IStatusCallback!");
                         }
                     });
                     if (mSurface != null) {
@@ -122,7 +137,7 @@ public class CameraApp {
                         mSurface = null;
                     }
                     try {
-                        mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
+                        mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_YUYV);
                     } catch (final IllegalArgumentException e) {
                         // fallback to YUV mode
                         try {
@@ -138,8 +153,12 @@ public class CameraApp {
                             mSurface = new Surface(st);
 //                            mVideoView.setZOrderOnTop(true);
 //                        mSurface = mVideoView.getHolder().getSurface();
+                        if (DEBUG) Log.d(TAG, "TextureView: " + mTextureView
+                                + "\n SurfaceTexture: " + st
+                                + "\n Surface: " + mSurface
+                                + "\n IFrameCallback: " + mIFrameCallback);
                         mUVCCamera.setPreviewDisplay(mSurface);
-//                        mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_RGB565/*UVCCamera.PIXEL_FORMAT_NV21*/);
+                        mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_YUV420SP);
                         mUVCCamera.startPreview();
                     }
                 }
@@ -148,6 +167,7 @@ public class CameraApp {
 
         @Override
         public void onDisconnect(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock) {
+            if (DEBUG) Log.d(TAG, "Usb disconnected!!!");
             if (mUVCCamera != null) {
                 mUVCCamera.close();
                 if (mSurface != null) {
@@ -158,8 +178,55 @@ public class CameraApp {
         }
 
         @Override
-        public void onCancel() {
+        public void onCancel(UsbDevice device) {
 
         }
     };
+
+    public final IFrameCallback mIFrameCallback = new IFrameCallback() {
+        @Override
+        public void onFrame(ByteBuffer frame) {
+            frameHandler.sendEmptyMessage(2);
+            remainBytes = frame.remaining();
+            frameBuffer = new byte[remainBytes];
+            frame.get(frameBuffer);
+        }
+    };
+
+    ByteBuffer tempBB;
+    byte[] frameBuffer;
+    int remainBytes;
+    private final Handler frameHandler = new Handler() {
+        @Override
+        public void dispatchMessage(Message msg) {
+
+            String supportedSize = "22"; // mUVCCamera.getStreamCtrlInfo();
+            List<Size> sizeList = mUVCCamera.getSupportedSizeList();
+            if (DEBUG) Log.d(TAG, "Stream Info: " + supportedSize
+                    + "\n Support List: \n"
+                    +  sizeList
+                    + "\n Current Size: \n"
+                    + mUVCCamera.getPreviewSize()
+                    + "\n ByteBuffer Info: \n"
+                    + "\n" + remainBytes);
+
+        }
+    };
+
+    @Override
+    public void toStop() {
+        if (mUVCCamera != null) {
+            mUVCCamera.stopPreview();
+            mUVCCamera.destroy();
+        }
+        unregisterUsbMonitor();
+        if (mUSBMonitor != null) {
+            mUSBMonitor.destroy();
+        }
+    }
+
+    @Override
+    public void toResume() {
+//        registerUsbMonitor();
+    }
 }

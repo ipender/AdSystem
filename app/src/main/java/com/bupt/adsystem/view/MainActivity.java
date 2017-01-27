@@ -38,19 +38,6 @@ public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
     private static final boolean DEBUG = AdSystemConfig.DEBUG;
 
-    // for thread pool
-//    private static final int CORE_POOL_SIZE = 1;		// initial/minimum threads
-//    private static final int MAX_POOL_SIZE = 4;			// maximum threads
-//    private static final int KEEP_ALIVE_TIME = 10;		// time periods while keep the idle thread
-//    protected static final ThreadPoolExecutor EXECUTER
-//            = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME,
-//            TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-
-    // for accessing USB and USB camera
-    private USBMonitor mUSBMonitor;
-    private UsbManager mUsbManager;
-    private UVCCamera mUVCCamera;
-
     private ImageSwitcher mImageSwitcher;
     private VideoView mVideoView;
     private TextureView mTextureView;
@@ -102,8 +89,10 @@ public class MainActivity extends Activity {
         mVideoView.setVisibility(View.INVISIBLE);
         mVideoView.setZOrderOnTop(true);
 
-        DownloadManager.instance(getApplicationContext());
+//        DownloadManager.instance(getApplicationContext());
 
+
+        final CameraApp uvcCamera = new CameraApp(getApplicationContext(), mTextureView);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,7 +121,7 @@ public class MainActivity extends Activity {
 //
 ////                String urlGet = MiscUtil.generateHttpGetUrl(0, 1, 80, 0, 0, 1, -89);
 ////                MiscUtil.getRequestTextFile(urlGet, handler);
-                Class<TelephonyManager> c = TelephonyManager.class;
+        /*        Class<TelephonyManager> c = TelephonyManager.class;
                 try
                 {
                     Method getITelephonyMethod = c.getDeclaredMethod("getITelephony", (Class[]) null);
@@ -147,15 +136,17 @@ public class MainActivity extends Activity {
                 catch (Exception e)
                 {
                     Log.e(TAG, "Fail to answer ring call.", e);
-                }
+                }*/
+
+                uvcCamera.startPreview();
                 if (DEBUG) Log.d(TAG, "Button Pressed!");
             }
         });
 
-        NewImageMgr.instance(mContext, mImageSwitcher);
+     /*   NewImageMgr.instance(mContext, mImageSwitcher);
         NewVideoMgr.instance(mContext, mVideoView);
         ServerRequest request = new ServerRequest(mContext, mMainHandler);
-        request.setFloorTextView(textView);
+        request.setFloorTextView(textView);*/
 
 //        mAdVideoCtrl = AdVideoCtrl.instance(mContext, mVideoView);
 //        mAdImageCtrl = AdImageCtrl.instance(mContext, mImageSwitcher);
@@ -238,6 +229,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        LifeCycleMgr.onResume();
 //        mCameraApp.registerUsbMonitor();
 //        mCameraApp.startPreview();
     }
@@ -246,85 +238,15 @@ public class MainActivity extends Activity {
     protected void onPause() {
 //        mCameraApp.unregisterUsbMonitor();
 //        mCameraApp.startPreview();
+        LifeCycleMgr.onStop();
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
 //        mCameraApp.destroy();
-        mServerRequest.httpDisconnect();
+//        mServerRequest.httpDisconnect();
         super.onDestroy();
     }
 
-//    private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
-//        @Override
-//        public void onAttach(UsbDevice device) {
-//
-//        }
-//
-//        @Override
-//        public void onDettach(UsbDevice device) {
-//
-//        }
-//
-//        @Override
-//        public void onConnect(UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock, boolean createNew) {
-//            if (mUVCCamera != null)
-//                mUVCCamera.destroy();
-//            mUVCCamera = new UVCCamera();
-//            EXECUTER.execute(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mUVCCamera.open(ctrlBlock);
-//                    mUVCCamera.setStatusCallback(new IStatusCallback() {
-//                        @Override
-//                        public void onStatus(final int statusClass, final int event, final int selector,
-//                                             final int statusAttribute, final ByteBuffer data) {
-//
-//                        }
-//                    });
-//                    if (mSurface != null) {
-//                        mSurface.release();
-//                        mSurface = null;
-//                    }
-//                    try {
-//                        mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
-//                    } catch (final IllegalArgumentException e) {
-//                        // fallback to YUV mode
-//                        try {
-//                            mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
-//                        } catch (final IllegalArgumentException e1) {
-//                            mUVCCamera.destroy();
-//                            mUVCCamera = null;
-//                        }
-//                    }
-//                    if (mUVCCamera != null) {
-//                        final SurfaceTexture st = mTextureView.getSurfaceTexture();
-//                        if (st != null)
-//                            mSurface = new Surface(st);
-//                        mUVCCamera.setPreviewDisplay(mSurface);
-////                        mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_RGB565/*UVCCamera.PIXEL_FORMAT_NV21*/);
-//                        mUVCCamera.startPreview();
-//                    }
-//                }
-//            });
-//
-//        }
-//
-//        @Override
-//        public void onDisconnect(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock) {
-//            if (mUVCCamera != null) {
-//                mUVCCamera.close();
-//                if (mSurface != null) {
-//                    mSurface.release();
-//                    mSurface = null;
-//                }
-//            }
-//        }
-//
-//        @Override
-//        public void onCancel() {
-//
-//        }
-//    };
 }

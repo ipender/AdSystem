@@ -3,11 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AdSystem.iml" filepath="$PROJECT_DIR$/AdSystem.iml" />
+      <module fileurl="file://$PROJECT_DIR$/anyrtc/anyrtc.iml" filepath="$PROJECT_DIR$/anyrtc/anyrtc.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" />
       <module fileurl="file://$PROJECT_DIR$/libuvccamera/libuvccamera.iml" filepath="$PROJECT_DIR$/libuvccamera/libuvccamera.iml" />
       <module fileurl="file://$PROJECT_DIR$/sensordriver/sensordriver.iml" filepath="$PROJECT_DIR$/sensordriver/sensordriver.iml" />
       <module fileurl="file://$PROJECT_DIR$/xutils/xutils.iml" filepath="$PROJECT_DIR$/xutils/xutils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yasea/yasea.iml" filepath="$PROJECT_DIR$/yasea/yasea.iml" />
     </modules>
   </component>
 </project>
