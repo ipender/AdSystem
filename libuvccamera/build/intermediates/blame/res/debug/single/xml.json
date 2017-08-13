@@ -1,9 +1,5 @@
 [
     {
-        "merged": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/res/merged/debug/xml/device_filter.xml",
-        "source": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/src/main/res/xml/device_filter.xml"
-    },
-    {
         "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/debug/xml/device_filter.xml",
         "source": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/src/main/res/xml/device_filter.xml"
     }

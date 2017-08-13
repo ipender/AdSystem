@@ -58,6 +58,8 @@ public class CameraApp implements LifeCycle {
     private TextureView mTextureView;
     private VideoView mVideoView;
 
+    private USBMonitor.UsbControlBlock mUsbControlBlock;
+
     public CameraApp(Context context, TextureView videoView) {
         mContext = context;
 //        mVideoView = videoView;
@@ -78,8 +80,40 @@ public class CameraApp implements LifeCycle {
     }
 
     public void startPreview() {
-        if (mUVCCamera != null)
+        mUVCCamera = UVCCamera.instance();
+        if (mUVCCamera != null) {
+
+            mUVCCamera.open(mUsbControlBlock);
+            if (mSurface != null) {
+                mSurface.release();
+                mSurface = null;
+            }
+            try {
+                mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_YUYV);
+            } catch (final IllegalArgumentException e) {
+                // fallback to YUV mode
+                try {
+                    mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+                } catch (final IllegalArgumentException e1) {
+                    mUVCCamera.destroy();
+                    mUVCCamera = null;
+                }
+            }
+
+            final SurfaceTexture st = mTextureView.getSurfaceTexture();
+            if (st != null)
+                mSurface = new Surface(st);
+            if (DEBUG) Log.d(TAG, "TextureView: " + mTextureView
+                    + "\n SurfaceTexture: " + st
+                    + "\n Surface: " + mSurface
+                    + "\n IFrameCallback: " + mIFrameCallback);
+
+            mUVCCamera.setPreviewDisplay(mSurface);
+            mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_YUV420SP);
+
             mUVCCamera.startPreview();
+        }
+
     }
 
     public void stopPreview() {
@@ -110,7 +144,7 @@ public class CameraApp implements LifeCycle {
         }
 
         @Override
-        public void onDettach(UsbDevice device) {
+        public void onDetach(UsbDevice device) {
 
         }
 
@@ -120,49 +154,49 @@ public class CameraApp implements LifeCycle {
                     "    " + device + "  " + ctrlBlock + "  " + createNew);
             if (mUVCCamera != null)
                 mUVCCamera.destroy();
-            mUVCCamera = new UVCCamera();
-            EXECUTER.execute(new Runnable() {
+//            mUVCCamera = new UVCCamera();
+            mUsbControlBlock = ctrlBlock;
+
+ /*           EXECUTER.execute(new Runnable() {
                 @Override
                 public void run() {
                     mUVCCamera.open(ctrlBlock);
-                    mUVCCamera.setStatusCallback(new IStatusCallback() {
-                        @Override
-                        public void onStatus(final int statusClass, final int event, final int selector,
-                                             final int statusAttribute, final ByteBuffer data) {
-                            if (DEBUG) Log.d(TAG, "IStatusCallback!");
-                        }
-                    });
-                    if (mSurface != null) {
-                        mSurface.release();
-                        mSurface = null;
-                    }
-                    try {
-                        mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_YUYV);
-                    } catch (final IllegalArgumentException e) {
-                        // fallback to YUV mode
-                        try {
-                            mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
-                        } catch (final IllegalArgumentException e1) {
-                            mUVCCamera.destroy();
-                            mUVCCamera = null;
-                        }
-                    }
+//                    mUVCCamera.setStatusCallback(new IStatusCallback() {
+//                        @Override
+//                        public void onStatus(final int statusClass, final int event, final int selector,
+//                                             final int statusAttribute, final ByteBuffer data) {
+//                            if (DEBUG) Log.d(TAG, "IStatusCallback!");
+//                        }
+//                    });
+//                    if (mSurface != null) {
+//                        mSurface.release();
+//                        mSurface = null;
+//                    }
+//                    try {
+//                        mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_YUYV);
+//                    } catch (final IllegalArgumentException e) {
+//                        // fallback to YUV mode
+//                        try {
+//                            mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+//                        } catch (final IllegalArgumentException e1) {
+//                            mUVCCamera.destroy();
+//                            mUVCCamera = null;
+//                        }
+//                    }
                     if (mUVCCamera != null) {
-                        final SurfaceTexture st = mTextureView.getSurfaceTexture();
-                        if (st != null)
-                            mSurface = new Surface(st);
-//                            mVideoView.setZOrderOnTop(true);
-//                        mSurface = mVideoView.getHolder().getSurface();
-                        if (DEBUG) Log.d(TAG, "TextureView: " + mTextureView
-                                + "\n SurfaceTexture: " + st
-                                + "\n Surface: " + mSurface
-                                + "\n IFrameCallback: " + mIFrameCallback);
-                        mUVCCamera.setPreviewDisplay(mSurface);
-                        mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_YUV420SP);
-                        mUVCCamera.startPreview();
+//                        final SurfaceTexture st = mTextureView.getSurfaceTexture();
+//                        if (st != null)
+//                            mSurface = new Surface(st);
+//                        if (DEBUG) Log.d(TAG, "TextureView: " + mTextureView
+//                                + "\n SurfaceTexture: " + st
+//                                + "\n Surface: " + mSurface
+//                                + "\n IFrameCallback: " + mIFrameCallback);
+//                        mUVCCamera.setPreviewDisplay(mSurface);
+//                        mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_YUV420SP);
+//                        mUVCCamera.startPreview();
                     }
                 }
-            });
+            });*/
         }
 
         @Override

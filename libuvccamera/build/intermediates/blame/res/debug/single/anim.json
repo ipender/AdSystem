@@ -1,9 +1,5 @@
 [
     {
-        "merged": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/res/merged/debug/anim/slide_out_right.xml",
-        "source": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/anim/slide_out_right.xml"
-    },
-    {
         "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/debug/anim/slide_in_right.xml",
         "source": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/anim/slide_in_right.xml"
     },
@@ -14,18 +10,6 @@
     {
         "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/debug/anim/slide_out_left.xml",
         "source": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/anim/slide_out_left.xml"
-    },
-    {
-        "merged": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/res/merged/debug/anim/slide_in_left.xml",
-        "source": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/anim/slide_in_left.xml"
-    },
-    {
-        "merged": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/res/merged/debug/anim/slide_out_left.xml",
-        "source": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/anim/slide_out_left.xml"
-    },
-    {
-        "merged": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/res/merged/debug/anim/slide_in_right.xml",
-        "source": "/home/hadoop/OpenSource/UVCCamera/libuvccamera/build/intermediates/exploded-aar/com.serenegiant/common/1.1.9/res/anim/slide_in_right.xml"
     },
     {
         "merged": "/home/hadoop/AndroidStudioProjects/AdSystem/libuvccamera/build/intermediates/res/merged/debug/anim/slide_in_left.xml",

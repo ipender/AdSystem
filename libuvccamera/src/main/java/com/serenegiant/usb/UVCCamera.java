@@ -43,6 +43,9 @@ import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 public class UVCCamera {
 	private static final boolean DEBUG = false;	// TODO set false when releasing
 	private static final String TAG = UVCCamera.class.getSimpleName();
+
+	private volatile static UVCCamera sUVCCamera;
+
 	private static final String DEFAULT_USBFS = "/dev/bus/usb";
 
 	public static final int DEFAULT_PREVIEW_WIDTH = 640;
@@ -181,6 +184,17 @@ public class UVCCamera {
     	mNativePtr = nativeCreate();
     	mSupportedSize = null;
 	}
+
+    public static UVCCamera instance() {
+        if (sUVCCamera == null) {
+            synchronized (UVCCamera.class) {
+                if (sUVCCamera == null) {
+                    sUVCCamera = new UVCCamera();
+                }
+            }
+        }
+        return sUVCCamera;
+    }
 
     /**
      * connect to a UVC camera

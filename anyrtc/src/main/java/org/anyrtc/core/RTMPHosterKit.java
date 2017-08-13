@@ -23,7 +23,8 @@ import android.util.Log;
 
 import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.EglBase;
-import org.webrtc.UVCCamera;
+import org.webrtc.UVCCameraInterface;
+import org.webrtc.UVCCameraVideoCapturer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoCapturerAndroid;
 
@@ -54,6 +55,7 @@ public class RTMPHosterKit {
 
     private int mCameraId = 0;
     private VideoCapturerAndroid mVideoCapturer;
+    private UVCCameraVideoCapturer mUVCVideoCapturer;
 
 
     public RTMPHosterKit(Activity act, final RTMPHosterHelper hosterHelper) {
@@ -135,13 +137,14 @@ public class RTMPHosterKit {
         });
     }
     /****************** added by Pandeng ************************/
-    public void setUVCCameraCapturer(final long renderPointer, UVCCamera cameraProxy) {
+    public void setUVCCameraCapturer(final long renderPointer, final UVCCameraInterface cameraProxy) {
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                if (mVideoCapturer == null) {
-
+                if (mUVCVideoCapturer == null) {
+                    mUVCVideoCapturer = new UVCCameraVideoCapturer(cameraProxy, false);
                 }
+                nativeSetVideoCapturer(mUVCVideoCapturer, renderPointer);
             }
         });
     }

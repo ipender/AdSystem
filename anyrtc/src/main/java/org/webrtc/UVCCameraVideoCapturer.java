@@ -1,8 +1,10 @@
 package org.webrtc;
 
 import android.content.Context;
+import android.nfc.Tag;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.util.Log;
 
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat;
 
@@ -14,10 +16,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by hadoop on 17-1-11.
  */
-public class UVCCameraVideoCapturer implements VideoCapturer {
+public class UVCCameraVideoCapturer implements VideoCapturer,
+        SurfaceTextureHelper.OnTextureFrameAvailableListener,
+        UVCCameraInterface.UVCFrameCallback {
 
+    private final static boolean DEBUG = true;
     private final static String TAG = "UVCCameraVideoCapturer";
     private static final int CAMERA_STOP_TIMEOUT_MS = 7000;
+    private static UVCCameraVideoCapturer sUVCCameraVideoCapturer;
 
 
     /* |mCameraThreadHandler| must be synchronized on |mCameraThreadLock| when not on the camera thread,
@@ -42,15 +48,15 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
 
     private int oriention = 0;
 
-    private UVCCamera mUVCCamera;
+    private UVCCameraInterface mUVCCamera;
 
 
-    public UVCCameraVideoCapturer(UVCCamera uvcCamera, boolean isCapturingToTexture) {
-        this.mUVCCamera = uvcCamera;
+    public UVCCameraVideoCapturer(UVCCameraInterface uvcCameraInterface, boolean isCapturingToTexture) {
+        this.mUVCCamera = uvcCameraInterface;
         this.isCapturingToTexture = isCapturingToTexture;
     }
 
-    public void setUVCCameraProxy(UVCCamera proxy) {
+    public void setUVCCameraProxy(UVCCameraInterface proxy) {
         this.mUVCCamera = proxy;
     }
 
@@ -107,14 +113,30 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
 
     }
 
+    // Requests a new output format from the video capturer. Captured frames
+    // by the camera will be scaled/or dropped by the video capturer.
+    // It does not matter if width and height are flipped. I.E, |width| = 640, |height| = 480 produce
+    // the same result as |width| = 480, |height| = 640.
     @Override
-    public void onOutputFormatRequest(int width, int height, int framerate) {
-
+    public void onOutputFormatRequest(final int width, final int height, final int framerate) {
+        maybePostOnCameraThread(new Runnable() {
+            @Override
+            public void run() {
+                onOutputFormatRequestOnCameraThread(width, height, framerate);
+            }
+        });
     }
 
+    // Reconfigure the camera to capture in a new format. This should only be called while the camera
+    // is running.
     @Override
-    public void changeCaptureFormat(int width, int height, int framerate) {
-
+    public void changeCaptureFormat(final int width, final int height, final int framerate) {
+        maybePostOnCameraThread(new Runnable() {
+            @Override
+            public void run() {
+                startPreviewOnCameraThread(width, height, framerate);
+            }
+        });
     }
 
     @Override
@@ -137,6 +159,40 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
         requestedFramerate = framerate;
 
         // Find closest supported format for |width| x |height| @ |framerate|.
+        //The framerate varies because of lightning conditions.
+        // The values are multiplied by 1000, so 1000 represents one frame per second.
+        final CaptureFormat.FramerateRange fpsRange = new CaptureFormat.FramerateRange(5000, 30000);  // fix the value of framerate for test
+        /*
+        *  surpported UVC camera size is: width x height
+        *  640 x 480
+        *
+        * */
+
+        final Size previewSize = new Size(640, 480); // fix the value of size for test 640 480
+
+        final CaptureFormat captureFormat =
+                new CaptureFormat(previewSize.width, previewSize.height, fpsRange);
+
+        // Check if we are already using this capture format, then we don't need to do anything.
+        if (captureFormat.equals(this.captureFormat)) {
+            return;
+        }
+
+        if (!isCapturingToTexture) {
+
+        }
+        // update camera parameters
+        mUVCCamera.setUVCPreviewSizeRate(captureFormat.width, captureFormat.height,
+                captureFormat.framerate.min, captureFormat.framerate.max);
+
+        if (this.captureFormat != null) {
+            mUVCCamera.stopUVCPreview();
+            mUVCCamera.setUVCCameraFrameCallback(null);
+        }
+
+        this.captureFormat = captureFormat;
+        mUVCCamera.setUVCCameraFrameCallback(this);
+        mUVCCamera.startUVCPreview();
     }
 
     private void startCaptureOnCameraThread(final int width, final int height, final int framerate,
@@ -152,8 +208,18 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
         this.applicationContext = applicationContext;
         this.frameObserver = frameObserver;
 
+        // test if it is suitable to move UVCCamera open function to here
 
+        if (mSurfaceHelper == null) Log.d(TAG, "SurfaceTextureHelper is null!");
+        mUVCCamera.setUVCPreviewTexture(mSurfaceHelper.getSurfaceTexture());
+        startPreviewOnCameraThread(width, height, framerate);
+        frameObserver.onCapturerStarted(true);
+        if (isCapturingToTexture) {
+            mSurfaceHelper.startListening(this);
+        }
     }
+
+
 
     private void onOutputFormatRequestOnCameraThread(int width, int height, int framerate) {
         synchronized (mCameraThreadLock) {
@@ -168,7 +234,17 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
     }
 
     // this function should be called by hardware camera when a video frame is ready
-    public void onFrame(byte[] frameData) {
+    @Override
+    public void onUVCFrame(final byte[] frameData) {
+        maybePostOnCameraThread(new Runnable() {
+            @Override
+            public void run() {
+                onUVCFrameRunOnCameraThread(frameData);
+            }
+        });
+    }
+
+    public void onUVCFrameRunOnCameraThread(byte[] frameData) {
         synchronized (mCameraThreadLock) {
             if (mCameraThreadHandler == null) {
                 return;
@@ -181,6 +257,10 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
                 TimeUnit.MILLISECONDS.toNanos(SystemClock.elapsedRealtime());
         frameObserver.onByteBufferFrameCaptured(frameData, captureFormat.width, captureFormat.height,
                 oriention, captureTimeNs);
+    }
+
+    @Override
+    public void onTextureFrameAvailable(int oesTextureId, float[] transformMatrix, long timestampNs) {
 
     }
 
@@ -205,4 +285,5 @@ public class UVCCameraVideoCapturer implements VideoCapturer {
             }
         }
     }
+
 }

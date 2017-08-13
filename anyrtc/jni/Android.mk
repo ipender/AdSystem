@@ -44,9 +44,9 @@ LOCAL_LDLIBS += -L$(call host-path,$(LOCAL_PATH)/library/v64) -lavformat -lavcod
 endif  	
 
 LOCAL_C_INCLUDES += $(NDK_STL_INC) \
-					$(LOCAL_PATH)/../../ \
-					$(LOCAL_PATH)/../../AnyCore \
-					$(LOCAL_PATH)/../../AnyCore/srs_librtmp \
+					$(LOCAL_PATH)/ \
+					$(LOCAL_PATH)/AnyCore \
+					$(LOCAL_PATH)/AnyCore/srs_librtmp \
 					$(LOCAL_PATH)/avstreamer \
 					$(LOCAL_PATH)/jni_util
 					

@@ -3,12 +3,15 @@ package com.bupt.adsystem.view;
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
+import android.media.MediaCodec;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.Window;
@@ -20,6 +23,7 @@ import android.widget.VideoView;
 
 import com.android.internal.telephony.ITelephony;
 import com.bupt.adsystem.Camera.CameraApp;
+import com.bupt.adsystem.Camera.UVCCameraEnumerator;
 import com.bupt.adsystem.R;
 import com.bupt.adsystem.RemoteServer.ServerRequest;
 import com.bupt.adsystem.Utils.AdImageCtrl;
@@ -31,6 +35,13 @@ import com.bupt.adsystem.downloadtask.DownloadManager;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
 
+import org.anyrtc.core.AnyRTMP;
+import org.anyrtc.core.RTMPHosterHelper;
+import org.anyrtc.core.RTMPHosterKit;
+import org.webrtc.SurfaceViewRenderer;
+import org.webrtc.UVCCameraVideoCapturer;
+import org.webrtc.VideoRenderer;
+
 import java.lang.reflect.Method;
 
 public class MainActivity extends Activity {
@@ -41,6 +52,9 @@ public class MainActivity extends Activity {
     private ImageSwitcher mImageSwitcher;
     private VideoView mVideoView;
     private TextureView mTextureView;
+    private SurfaceViewRenderer mRTCSurfaceView;
+    private VideoRenderer mRTCRenderer = null;
+    private RTMPHosterKit mHosterKit = null;
 
     private Button button;
     private TextView mElevatorTextView;
@@ -84,19 +98,43 @@ public class MainActivity extends Activity {
         textView = (TextView) findViewById(R.id.textView);
         mTextureView = (TextureView) findViewById(R.id.textureView);
         mVideoView = (VideoView) findViewById(R.id.surface_view);
+        mRTCSurfaceView = (SurfaceViewRenderer) findViewById(R.id.webrtc_surface_view);
         mElevatorTextView = (TextView) findViewById(R.id.Sensor_TextView);
-        mTextureView.setVisibility(View.VISIBLE);
+        mTextureView.setVisibility(View.INVISIBLE);
         mVideoView.setVisibility(View.INVISIBLE);
-        mVideoView.setZOrderOnTop(true);
+//        mVideoView.setZOrderOnTop(true);
+        mRTCSurfaceView.setVisibility(View.VISIBLE);
+
 
 //        DownloadManager.instance(getApplicationContext());
 
+        /***************** for push rtmp video stream test ******************/
 
-        final CameraApp uvcCamera = new CameraApp(getApplicationContext(), mTextureView);
+//        final String mRtmpUrl = "rtmp://10.0.0.2:1935/live/test";
+        final String mRtmpUrl = "rtmp://192.168.1.101:1935/live/test";
+//        String mRtmpUrl = "rtmp://aokai.lymatrix.com/aokai/test";
+
+        final UVCCameraEnumerator mUVCCamera = UVCCameraEnumerator.instance(getApplicationContext(), null);
+        mRTCSurfaceView.init(AnyRTMP.Inst().Egl().getEglBaseContext(), null);
+        mRTCRenderer = new VideoRenderer(mRTCSurfaceView);
+        mHosterKit = new RTMPHosterKit(this, mRTMPHosterHelper);
+
+
+//        MediaRecorder
+//        MediaCodec
+//        Surface
+        /***************** for push rtmp video stream test ******************/
+
+//        final CameraApp uvcCamera = new CameraApp(getApplicationContext(), mTextureView);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+//        mHosterKit.SetVideoCapturer(mRTCRenderer.GetRenderPointer(), true);
+                mHosterKit.setUVCCameraCapturer(mRTCRenderer.GetRenderPointer(), mUVCCamera);
+                mHosterKit.StartRtmpStream(mRtmpUrl);
+
 //                Time time = new Time("GMT+8");
 //                time.set(System.currentTimeMillis() + 10000);
 //                String alarmTime = String.format("%02d:%02d:%02d", time.hour, time.minute, time.second);
@@ -138,7 +176,7 @@ public class MainActivity extends Activity {
                     Log.e(TAG, "Fail to answer ring call.", e);
                 }*/
 
-                uvcCamera.startPreview();
+//                uvcCamera.startPreview();
                 if (DEBUG) Log.d(TAG, "Button Pressed!");
             }
         });
@@ -248,5 +286,57 @@ public class MainActivity extends Activity {
 //        mServerRequest.httpDisconnect();
         super.onDestroy();
     }
+
+    final RTMPHosterHelper mRTMPHosterHelper = new RTMPHosterHelper() {
+        @Override
+        public void OnRtmpStreamOK() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (DEBUG) Log.d(TAG, "RTMP 连接成功！");
+                }
+            });
+        }
+
+        @Override
+        public void OnRtmpStreamReconnecting(final int times) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (DEBUG) Log.d(TAG, String.format("RTMP 重连中(%1$d秒)...", times));
+                }
+            });
+        }
+
+        @Override
+        public void OnRtmpStreamStatus(final int delayMs, final int netBand) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (DEBUG) Log.d(TAG, String.format(getString(org.anyrtc.anyrtmp.R.string.str_rtmp_status), delayMs, netBand));
+                }
+            });
+        }
+
+        @Override
+        public void OnRtmpStreamFailed(int code) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (DEBUG) Log.d(TAG, "RTMP 连接失败");
+                }
+            });
+        }
+
+        @Override
+        public void OnRtmpStreamClosed() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (DEBUG) Log.d(TAG, "RTMP 关闭!");
+                }
+            });
+        }
+    };
 
 }
